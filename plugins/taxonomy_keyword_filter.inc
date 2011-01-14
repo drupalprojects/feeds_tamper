@@ -11,7 +11,7 @@ if (module_exists('taxonomy')) {
   );
 }
 
-function feeds_tamper_taxonomy_keyword_filter_form($settings) {
+function feeds_tamper_taxonomy_keyword_filter_form($importer, $source, $settings) {
   $form = array();
 
   $tax = taxonomy_get_vocabularies();

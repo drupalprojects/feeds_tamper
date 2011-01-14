@@ -9,7 +9,7 @@ $plugin = array(
   'category' => 'HTML',
 );
 
-function feeds_tamper_html_entity_encode_form($settings) {
+function feeds_tamper_html_entity_encode_form($importer, $source, $settings) {
   $form = array();
 
   $form['html'] = array(

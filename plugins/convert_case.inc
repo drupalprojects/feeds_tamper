@@ -9,7 +9,7 @@ $plugin = array(
   'category' => 'Text',
 );
 
-function feeds_tamper_html_convert_case_form($settings) {
+function feeds_tamper_html_convert_case_form($importer, $source, $settings) {
   $form = array();
 
   $form['mode'] = array(

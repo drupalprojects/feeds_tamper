@@ -10,14 +10,14 @@ $plugin = array(
   'category' => 'HTML',
 );
 
-function feeds_tamper_strip_tags_form($settings) {
+function feeds_tamper_strip_tags_form($importer, $source, $settings) {
   $form = array();
 
   $form['allowed_tags'] = array(
     '#type' => 'textfield',
     '#title' => t('Allowed tags'),
     '#default_value' => isset($settings['allowed_tags']) ? $settings['allowed_tags'] : '',
-    '#description' => t('A list of allowed tags, such as %a%b.', array('%a' => '<a>', '%b' => '<em>')),
+    '#description' => t('A list of allowed tags, such as %a, %b.', array('%a' => '<a>', '%b' => '<em>')),
   );
 
   return $form;

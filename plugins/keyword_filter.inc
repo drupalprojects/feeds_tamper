@@ -10,7 +10,7 @@ $plugin = array(
   'category' => 'Filter',
 );
 
-function feeds_tamper_keyword_filter_form($settings) {
+function feeds_tamper_keyword_filter_form($importer, $source, $settings) {
 
   $form = array();
 

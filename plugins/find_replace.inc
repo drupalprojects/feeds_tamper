@@ -10,7 +10,7 @@ $plugin = array(
   'category' => 'Text',
 );
 
-function feeds_tamper_find_replace_form($settings) {
+function feeds_tamper_find_replace_form($importer, $source, $settings) {
   $form = array();
 
   $form['find'] = array(

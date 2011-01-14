@@ -11,7 +11,7 @@ $plugin = array(
   'category' => 'List',
 );
 
-function feeds_tamper_implode_form($settings) {
+function feeds_tamper_implode_form($importer, $source, $settings) {
   $form = array();
 
   $form['glue'] = array(

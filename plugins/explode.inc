@@ -10,7 +10,7 @@ $plugin = array(
   'category' => 'List',
 );
 
-function feeds_tamper_explode_form($settings) {
+function feeds_tamper_explode_form($importer, $source, $settings) {
   $form = array();
 
   $form['separator'] = array(

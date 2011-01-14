@@ -9,7 +9,7 @@ $plugin = array(
   'category' => 'Text',
 );
 
-function feeds_tamper_trim_form($settings) {
+function feeds_tamper_trim_form($importer, $source, $settings) {
   $form = array();
 
   $form['mask'] = array(

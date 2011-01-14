@@ -8,7 +8,7 @@ $plugin = array(
   'category' => 'HTML',
 );
 
-function feeds_tamper_absolute_url_form($settings) {
+function feeds_tamper_absolute_url_form($importer, $source, $settings) {
   $form = array();
 
   $form['info'] = array(
@@ -26,7 +26,7 @@ function feeds_tamper_absolute_url_callback($source, $item_key, $element_key, &$
   static $base_url = NULL;
 
   if (!$base_url) {
-    $base_url = rtrim($source->batch->getLink(), '/') . '/';
+    $base_url = rtrim($source->batch->link, '/') . '/';
   }
 
   preg_match_all('/<.*(href|src)(\s*=\s*)(\'|")(.*)("|\').*>/', $field, $matches, PREG_SET_ORDER);

@@ -12,16 +12,13 @@
 * processing, this gets called and modifies the data based on the configuration.
 */
 function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $source) {
-  $node = $source->batch->feedNode();
-  $nid = $node ? $node->nid : 0;
-  $attached = feeds_tamper_get_attached($importer->id, $nid);
-  if (empty($attached)) {
+  $instances = feeds_tamper_load_by_importer($importer->id);
+  if (empty($instances)) {
     return;
   }
   foreach ($source->batch->items as $item_key => &$item) {
-    foreach ($attached as $element_key => $attached_instances) {
-      foreach ($attached_instances as $instance_) {
-        $instance = feeds_tamper_load_instance($instance_['instance_id']);
+    foreach ($instances as $element_key => $instances_) {
+      foreach ($instances_ as $instance) {
         $plugin = feeds_tamper_get_plugin($instance->plugin_id);
 
         if (is_array($item[$element_key]) && $plugin['multi'] == 'loop') {
@@ -100,167 +97,6 @@ function feeds_tamper_feeds_after_import(FeedsImporter $importer, FeedsSource $s
 }
 
 /**
- * Drupal hooks.
- */
-
-/**
- * Implementation of hook_nodeapi().
- */
-function feeds_tamper_nodeapi(&$node, $op, $form) {
-  if ($importer_id = feeds_get_importer_id($node->type)) {
-    switch ($op) {
-      case 'validate':
-      case 'presave':
-        break;
-      case 'insert':
-      case 'update':
-        _feeds_tamer_save($importer_id, $node->nid, $node->feeds_tamper);
-        break;
-      case 'delete':
-        feeds_tamper_delete_attached($importer_id, $node->nid);
-        break;
-    }
-  }
-}
-
-/**
- * Helper function for saving from nodes or the standalone form.
- */
-function _feeds_tamer_save($importer_id, $nid, $values) {
-  if (is_array($values)) {
-    feeds_tamper_delete_attached($importer_id, $nid);
-    foreach ($values as $source_field => $items) {
-      $items = array_filter($items['list']);
-      $settings = array();
-      foreach ($items as $item) {
-        $settings[$source_field][] = array(
-          'instance_id' => $item,
-          //'weight' => $item['weight'],
-        );
-      }
-      feeds_tamper_save_attached($importer_id, $nid, $settings);
-    }
-  }
-}
-
-/**
- * Implementation of hook_form_alter().
- */
-function feeds_tamper_form_alter(&$form, &$form_state, $form_id) {
-  if ($form['#id'] == 'node-form') {
-    if ($importer_id = feeds_get_importer_id($form['type']['#value'])) {
-      $nid = !empty($form['nid']['#value']) ? $form['nid']['#value'] : 0;
-      _feeds_tamper_form_alter($importer_id, $nid, $form);
-    }
-  }
-}
-
-/**
- * Helper function for altering node forms and the standalone form.
- */
-function _feeds_tamper_form_alter($importer_id, $nid, &$form) {
-  $instances = feeds_tamper_load_all_instances();
-  $source = feeds_source($importer_id, $nid);
-  $mappings = $source->importer->processor->config['mappings'];
-  $attached = feeds_tamper_get_attached($importer_id, $nid);
-
-  $form['feeds_tamper'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Feeds Tamper'),
-    '#tree' => TRUE,
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  foreach ($mappings as $mapping) {
-    $def = isset($attached[$mapping['source']]) ? $attached[$mapping['source']] : array();
-    $def_value = array();
-
-    foreach ($def as $d) {
-      $def_value[$d['instance_id']] = $d['instance_id'];
-    }
-
-    $form['feeds_tamper'][$mapping['source']] = array(
-      '#type' => 'fieldset',
-      '#title' => t($mapping['source']),
-    );
-
-    $mods = array();
-    foreach ($instances as $instance) {
-      $plugin = feeds_tamper_get_plugin($instance->plugin_id);
-      if ($plugin['allowed']) {
-        if ($plugin['allowed']($importer_id, $mapping['source'], $instance->settings)) {
-          $mods[] = $instance->id;
-        }
-      }
-      else {
-        $mods[] = $instance->id;
-      }
-    }
-    /**
-     * @todo
-     *   Make these individual checkboxes to help with draggable list.
-     */
-    if (!empty($mods)) {
-      $form['feeds_tamper'][$mapping['source']]['list'] = array(
-        '#type' => 'checkboxes',
-        '#options' => array_combine($mods, $mods),
-        '#default_value' => $def_value,
-        //'#theme' => 'feeds_tamper_list_sort_form',
-      );
-    }
-  }
-}
-
-/**
- * Implementation of hook_form_FORM_ID_alter().
- */
-function feeds_tamper_form_feeds_import_form_alter(&$form, &$form_state) {
-  _feeds_tamper_form_alter($form['#importer_id'], 0, $form);
-  array_unshift($form['#submit'], 'feeds_tamper_form_feeds_import_submit');
-}
-
-function feeds_tamper_form_feeds_import_submit($form, $form_state) {
-  _feeds_tamer_save($form['#importer_id'], 0, $form_state['values']['feeds_tamper']);
-}
-
-/**
-* Implementation of hook_theme
-*/
-function feeds_tamper_theme() {
-  return array(
-    'feeds_tamper_list_sort_form' => array(
-      'arguments' => array('form' => NULL),
-    ),
-  );
-}
-
-/**
- * Theme callback, not currently used. Hopefully it will be soon.
- */
-function theme_feeds_tamper_list_sort_form($form) {
-  if (count(element_children($form)) == 0) {
-    return;
-  }
-  $instance = feeds_tamper_get_plugin($form['#title']);
-  drupal_add_tabledrag('feeds-tamper-sort-' . $form['#parents'][1], 'order', 'sibling', 'sort');
-  $header = array('', 'name');
-  foreach (element_children($form) as $key) {
-    // Add class to group weight fields for drag and drop.
-    $form[$key]['sort']['#attributes']['class'] = 'sort';
-
-    $row = array(''); //This is important. We need to start with an empty element for the drag handle.
-
-    $row[] = drupal_render($form[$key]);
-    $row[] = drupal_render($form[$key]['sort']);
-    $rows[] = array('data' => $row, 'class' => 'draggable'); //note the difference between $row and $rows
-  }
-  $output = theme('table', $header, $rows, array('id' => 'feeds-tamper-sort-' . $form['#parents'][1]));
-  $output .= drupal_render($form);
-  return $output;
-}
-
-/**
  * Feeds Tamper api functions.
  */
 
@@ -271,7 +107,7 @@ function feeds_tamper_load_all_instances($load_disabled = FALSE) {
   $instances = array();
   if (function_exists('ctools_include')) {
     ctools_include('export');
-    $configs = ctools_export_load_object('feeds_tamper_instance', 'all');
+    $configs = ctools_export_load_object('feeds_tamper', 'all');
     foreach ($configs as $instance_id => $config) {
       if (!empty($config->id) && ($load_disabled || empty($config->disabled))) {
         $instances[$instance_id] = $config;
@@ -285,69 +121,23 @@ function feeds_tamper_load_all_instances($load_disabled = FALSE) {
  * Load a plugin instance by id.
  */
 function feeds_tamper_load_instance($id) {
-  $t = ctools_export_load_object('feeds_tamper_instance', 'names', array($id));
+  ctools_include('export');
+  $t = ctools_export_load_object('feeds_tamper', 'names', array($id));
   return $t[$id];
 }
 
-/**
- * Get the modifiers attached to a feed source.
- */
-function feeds_tamper_get_attached($importer_id, $nid, $source_field = NULL) {
-  $results = array();
-
-  if ($source_field) {
-    $q_string = "SELECT instance_id,weight FROM {feeds_tamper_attached}
-                 WHERE importer_id = '%s' AND nid = %d AND source_field = '%s'
-                 ORDER BY weight ASC";
-    $query = db_query($q_string, $importer_id, $nid, $source_field);
-
-    while ($result = db_fetch_array($query)) {
-      $results[$source_field][] = $result;
+function feeds_tamper_load_by_importer($importer_id) {
+  $query = "Select * from {feeds_tamper} WHERE importer = '%s'";
+  $query = db_query($query, $importer_id);
+  $return = array();
+  while ($result = db_fetch_object($query)) {
+    $result->settings = unserialize($result->settings);
+    if (!isset($return[$result->source])) {
+      $return[$result->source] = array();
     }
+    array_unshift($return[$result->source], $result);
   }
-
-  else {
-    $q_string = "SELECT source_field,instance_id,weight FROM {feeds_tamper_attached}
-                 WHERE importer_id = '%s' AND nid = %d ORDER BY weight ASC";
-    $query = db_query($q_string, $importer_id, $nid);
-
-    while ($result = db_fetch_array($query)) {
-      $results[$result['source_field']][] = array(
-        'instance_id' => $result['instance_id'],
-        'weight'      => $result['weight'],
-      );
-    }
-  }
-
-  return $results;
-}
-
-/**
- * Inserts a record.
- */
-function feeds_tamper_save_attached($importer_id, $nid, $settings) {
-  $obj = new stdClass();
-  $obj->importer_id = $importer_id;
-  $obj->nid = $nid;
-
-  foreach ($settings as $source_field => $config) {
-    $obj->source_field = $source_field;
-    foreach ($config as $instance) {
-      //$obj->weight = $instance['weight'];
-      $obj->instance_id = $instance['instance_id'];
-      drupal_write_record('feeds_tamper_attached', $obj);
-    }
-  }
-}
-
-/**
- * Deletes a record.
- */
-function feeds_tamper_delete_attached($importer_id, $nid, $source_field = NULL) {
-  if ($source_field) {
-    return db_query("DELETE FROM {feeds_tamper_attached} WHERE importer_id = '%s' AND nid = %d AND source_field = '%s'", $importer_id, $nid, $source_field);
-  }
-  return db_query("DELETE FROM {feeds_tamper_attached} WHERE importer_id = '%s' AND nid = %d", $importer_id, $nid);
+  return $return;
 }
 
 /**
@@ -385,8 +175,8 @@ function feeds_tamper_get_plugin($id) {
  * Implementation of hook_ctools_plugin_api().
  */
 function feeds_tamper_ctools_plugin_api($owner, $api) {
-  if ($owner == 'feeds_tamper' && $api == 'feeds_tamper_preset') {
-    return array('version' => 1);
+  if ($owner == 'feeds_tamper') {
+    return array('version' => 2);
   }
 }
 
@@ -394,9 +184,6 @@ function feeds_tamper_ctools_plugin_api($owner, $api) {
 * Implementation of hook_ctools_plugin_directory().
 */
 function feeds_tamper_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'ctools' && $plugin == 'export_ui') {
-    return 'plugins/' . $plugin;
-  }
   if ($module == 'feeds_tamper') {
     return 'plugins/';
   }

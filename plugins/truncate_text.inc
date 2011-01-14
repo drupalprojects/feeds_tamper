@@ -9,7 +9,7 @@ $plugin = array(
   'category' => 'Text',
 );
 
-function feeds_tamper_truncate_text_form($settings) {
+function feeds_tamper_truncate_text_form($importer, $source, $settings) {
   $form = array();
 
   $form['num_char'] = array(
