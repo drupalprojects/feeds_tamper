@@ -127,6 +127,10 @@ function feeds_tamper_ui_add_plugin_form_submit(&$form, &$form_state) {
   $obj->settings = $form_state['values'][$obj->plugin_id];
   $obj->importer = $form_state['importer']->id;
   $obj->source = $form_state['source'];
+  $plugin = feeds_tamper_get_plugin($obj->plugin_id);
+  if ($plugin['validate']) {
+    $plugin['validate']($obj->settings);
+  }
   drupal_write_record('feeds_tamper', $obj);
   drupal_goto('admin/build/feeds_tamper/edit/' . $obj->importer);
 }
@@ -164,6 +168,10 @@ function feeds_tamper_ui_edit_plugin_form_submit($form, &$form_state) {
   $obj->settings = $form_state['values'][$obj->plugin_id];
   $obj->importer = $form_state['instance']->importer;
   $obj->source = $form_state['instance']->source;
+  $plugin = feeds_tamper_get_plugin($obj->plugin_id);
+  if ($plugin['validate']) {
+    $plugin['validate']($obj->settings);
+  }
   drupal_write_record('feeds_tamper', $obj, 'id');
   drupal_goto('admin/build/feeds_tamper/edit/' . $obj->importer);
 }
