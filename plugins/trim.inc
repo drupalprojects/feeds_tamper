@@ -22,7 +22,7 @@ function feeds_tamper_trim_form($importer, $source, $settings) {
   $form['side'] = array(
     '#type' => 'radios',
     '#title' => t('Side'),
-    '#default_value' => isset($settings['mask']) ? $settings['mask'] : 'trim',
+    '#default_value' => isset($settings['side']) ? $settings['side'] : 'trim',
     '#options' => array('trim' => t('Both'), 'ltrim' => t('Left'), 'rtrim' => t('Right')),
   );
 
