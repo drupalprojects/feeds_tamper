@@ -17,23 +17,22 @@ function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $so
     return;
   }
   foreach ($source->batch->items as $item_key => &$item) {
-    foreach ($instances as $element_key => $instances_) {
-      foreach ($instances_ as $instance) {
-        $plugin = feeds_tamper_get_plugin($instance->plugin_id);
+    foreach ($instances as $instance) {
+      $element_key = $instance->source;
+      $plugin = feeds_tamper_get_plugin($instance->plugin_id);
 
-        if (is_array($item[$element_key]) && $plugin['multi'] == 'loop') {
-          foreach ($item[$element_key] as &$i) {
-            $plugin['callback']($source, $item_key, $element_key, $i, $instance->settings);
-          }
+      if (is_array($item[$element_key]) && $plugin['multi'] == 'loop') {
+        foreach ($item[$element_key] as &$i) {
+          $plugin['callback']($source, $item_key, $element_key, $i, $instance->settings);
         }
+      }
 
-        else if (is_array($item[$element_key]) && $plugin['multi'] == 'direct') {
-          $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
-        }
+      else if (is_array($item[$element_key]) && $plugin['multi'] == 'direct') {
+        $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
+      }
 
-        else if (!is_array($item[$element_key]) && $plugin['single'] != 'skip') {
-          $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
-        }
+      else if (!is_array($item[$element_key]) && $plugin['single'] != 'skip') {
+        $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
       }
     }
   }
@@ -49,51 +48,6 @@ function feeds_tamper_feeds_node_processor_targets_alter(&$targets, $content_typ
     'name' => 'Rewrite Store',
     'description' => t('A field that stores the source data temporarily so that it can be used with the Feeds Tamper rewrite plugin.'),
   );
-  $targets['feeds_tamper_node_reference'] = array(
-    'name' => t('Tamper Reference (Experimental)'),
-    'description' => t('An experimental target that creates node references. Currently only references from GUID to GUID\'s are supported.'),
-    'callback' => 'feeds_tamper_node_reference_callback',
-  );
-}
-
-/**
- * Callback for feeds_tamper_feeds_node_processor_targets_alter().
- */
-function feeds_tamper_node_reference_callback($node, $target_element, $value) {
-  $store = variable_get('feeds_tamper_node_references', array());
-  $importer_id = $node->feeds_node_item->id;
-  $feed_nid = $node->feeds_node_item->feed_nid;
-  $guid = $node->feeds_node_item->guid;
-
-  if (!isset($store[$importer_id])) {
-    $store[$importer_id] = array();
-    $store[$importer_id][$feed_nid] = array();
-  }
-
-  if (!is_array($value)) {
-    $value = array($value);
-  }
-  $store[$importer_id][$feed_nid][$guid] = $value;
-  variable_set('feeds_tamper_node_references', $store);
-}
-
-/**
-* Implementation of hook_feeds_after_import().
-*/
-function feeds_tamper_feeds_after_import(FeedsImporter $importer, FeedsSource $source) {
-  $store = variable_get('feeds_tamper_node_references', array());
-  foreach ($store[$importer->id][$source->feed_nid] as $guid => $references) {
-    $query_s = "SELECT nid from {feeds_node_item} WHERE guid = '%s'";
-    $node = node_load(db_fetch_object(db_query($query_s, $guid))->nid);
-    $i = 0;
-    foreach ($references as $ref) {
-      $nid = db_fetch_object(db_query($query_s, $ref))->nid;
-      $node->field_ref[$i]['nid'] = $nid;
-      $i++;
-    }
-    node_save($node);
-  }
-  variable_del('feeds_tamper_node_references');
 }
 
 /**
