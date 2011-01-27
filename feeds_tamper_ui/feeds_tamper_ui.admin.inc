@@ -145,7 +145,8 @@ function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {
   $form = array();
   $form['#tree'] = TRUE;
 
-  foreach ($plugin['form']($instance->importer, $instance->source, $instance->settings) as $key => $form_item) {
+  $importer = feeds_importer($instance->importer);
+  foreach ($plugin['form']($importer, $instance->source, $instance->settings) as $key => $form_item) {
     $form[$instance->plugin_id][$key] = $form_item;
   }
 

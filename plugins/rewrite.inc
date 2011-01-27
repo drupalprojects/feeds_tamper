@@ -24,6 +24,7 @@ function feeds_tamper_rewrite_form($importer, $source, $settings) {
   $form['text'] = array(
     '#type' => 'textarea',
     '#title' => t('Replacement pattern'),
+    '#default_value' => isset($settings['text']) ? $settings['text'] : '',
   );
   return $form;
 }
