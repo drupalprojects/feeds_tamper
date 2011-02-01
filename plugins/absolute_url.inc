@@ -2,27 +2,36 @@
 // $Id$
 
 $plugin = array(
-  'form'     => 'feeds_tamper_absolute_url_form',
+  'form' => 'feeds_tamper_absolute_url_form',
   'callback' => 'feeds_tamper_absolute_url_callback',
-  'name'     => 'Make URLs absolute',
+  'name' => 'Make URLs absolute',
   'category' => 'HTML',
+  'description' => 'feeds_tamper_absolute_url_description',
+  'machine_name' => 'feeds_tamper_absolute_url_machine_name',
 );
 
-function feeds_tamper_absolute_url_form($importer, $source, $settings) {
+function feeds_tamper_absolute_url_form($importer, $element_key, $settings) {
   $form = array();
-
+  $links = htmlentities('<a href="/stuff/things"> to <a href="http://example.com/stuff/things">');
   $form['info'] = array(
-    '#value' => t('This plugin has no options.<br>'),
+    '#markup' => t('Make URLs in markup absolute. (i.e. ' . $links . ').'),
   );
-
   return $form;
+}
+
+function feeds_tamper_absolute_url_description($settings) {
+  return 'Make URLs absolute.';
+}
+
+function feeds_tamper_absolute_url_machine_name($settings) {
+  return 'make_urls_absolute';
 }
 
 /**
  * @todo
  *   Make this not suck.
  */
-function feeds_tamper_absolute_url_callback($source, $item_key, $element_key, &$field, $values) {
+function feeds_tamper_absolute_url_callback($source, $item_key, $element_key, &$field, $settings) {
   static $base_url = NULL;
 
   if (!$base_url) {

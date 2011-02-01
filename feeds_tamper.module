@@ -12,27 +12,27 @@
 * processing, this gets called and modifies the data based on the configuration.
 */
 function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $source) {
-  $instances = feeds_tamper_load_by_importer($importer->id);
-  if (empty($instances)) {
+  $importer_instances = feeds_tamper_load_by_importer($source->importer->id);
+  if (empty($importer_instances)) {
     return;
   }
   foreach ($source->batch->items as $item_key => &$item) {
-    foreach ($instances as $instance) {
-      $element_key = $instance->source;
-      $plugin = feeds_tamper_get_plugin($instance->plugin_id);
+    foreach ($importer_instances as $element_key => $instances) {
+      foreach ($instances as $instance) {
+        $plugin = feeds_tamper_get_plugin($instance->plugin_id);
+        $is_array = is_array($item[$element_key]);
 
-      if (is_array($item[$element_key]) && $plugin['multi'] == 'loop') {
-        foreach ($item[$element_key] as &$i) {
-          $plugin['callback']($source, $item_key, $element_key, $i, $instance->settings);
+        if ($is_array && $plugin['multi'] == 'loop') {
+          foreach ($item[$element_key] as &$i) {
+            $plugin['callback']($source, $item_key, $element_key, $i, $instance->settings);
+          }
         }
-      }
-
-      else if (is_array($item[$element_key]) && $plugin['multi'] == 'direct') {
-        $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
-      }
-
-      else if (!is_array($item[$element_key]) && $plugin['single'] != 'skip') {
-        $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
+        else if ($is_array && $plugin['multi'] == 'direct') {
+          $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
+        }
+        else if (!$is_array && $plugin['single'] != 'skip') {
+          $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
+        }
       }
     }
   }
@@ -61,7 +61,7 @@ function feeds_tamper_load_all_instances($load_disabled = FALSE) {
   $instances = array();
   if (function_exists('ctools_include')) {
     ctools_include('export');
-    $configs = ctools_export_load_object('feeds_tamper', 'all');
+    $configs = ctools_export_crud_load_all('feeds_tamper');
     foreach ($configs as $instance_id => $config) {
       if (!empty($config->id) && ($load_disabled || empty($config->disabled))) {
         $instances[$instance_id] = $config;
@@ -76,22 +76,34 @@ function feeds_tamper_load_all_instances($load_disabled = FALSE) {
  */
 function feeds_tamper_load_instance($id) {
   ctools_include('export');
-  $t = ctools_export_load_object('feeds_tamper', 'names', array($id));
-  return $t[$id];
+  return ctools_export_crud_load('feeds_tamper', $id);
 }
 
-function feeds_tamper_load_by_importer($importer_id) {
-  $query = "Select * from {feeds_tamper} WHERE importer = '%s'";
-  $query = db_query($query, $importer_id);
-  $return = array();
-  while ($result = db_fetch_object($query)) {
-    $result->settings = unserialize($result->settings);
-    if (!isset($return[$result->source])) {
-      $return[$result->source] = array();
-    }
-    array_unshift($return[$result->source], $result);
+function feeds_tamper_load_by_importer($importer_id, $disabled = FALSE) {
+  $mappings = feeds_importer($importer_id)->processor->config['mappings'];
+  $sources = array();
+  foreach ($mappings as $mapping) {
+    $sources[] = $mapping['source'];
   }
-  return $return;
+  ctools_include('export');
+  $t = ctools_export_load_object('feeds_tamper', 'conditions', array('importer' => $importer_id));
+  $instances = array();
+  foreach ($t as $i) {
+    if (($disabled || empty($i->disabled)) && in_array($i->source, $sources)) {
+      $instances[$i->source][] = $i;
+    }
+  }
+  foreach ($instances as &$instance_list) {
+    usort($instance_list, '_feeds_tamper_cmp');
+  }
+  return $instances;
+}
+
+function _feeds_tamper_cmp($a, $b) {
+  if ($a->weight == $b->weight) {
+    return 0;
+  }
+  return ($a->weight < $b->weight) ? -1 : 1;
 }
 
 /**
@@ -99,7 +111,7 @@ function feeds_tamper_load_by_importer($importer_id) {
  *
  * @return
  *   An array where the keys are the plugin keys and the values
- *   are the plugin info arrays as defined in hook_feeds_tamper_plugins().
+ *   are the plugin info arrays as defined in a plugin include file.
  */
 function feeds_tamper_get_plugins() {
   ctools_include('plugins');
@@ -114,7 +126,7 @@ function feeds_tamper_get_plugins() {
  *
  * @return
  *   An array where the keys are the plugin keys and the values
- *   are the plugin info arrays as defined in hook_feeds_tamper_plugins().
+ *   are the plugin info arrays as defined in a plugin include file.
  */
 function feeds_tamper_get_plugin($id) {
   ctools_include('plugins');
@@ -129,7 +141,7 @@ function feeds_tamper_get_plugin($id) {
  * Implementation of hook_ctools_plugin_api().
  */
 function feeds_tamper_ctools_plugin_api($owner, $api) {
-  if ($owner == 'feeds_tamper') {
+  if ($owner == 'feeds_tamper' && $api == 'plugins') {
     return array('version' => 2);
   }
 }
@@ -158,8 +170,17 @@ function feeds_tamper_ctools_plugin_plugins() {
     'defaults' => array(
       'validate' => FALSE,
       'multi' => FALSE,
-      'allowed' => FALSE,
+      'description' => FALSE,
+      'machine_name' => FALSE,
       'category' => 'Other',
+      'single' => FALSE,
     ),
   );
+}
+
+/**
+ * Create a machine name.
+ */
+function feeds_tamper_make_machine($string) {
+  return substr(preg_replace('/[^a-z0-9-]/', '_', strtolower($string)), 0, 127);
 }

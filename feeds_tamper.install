@@ -13,7 +13,6 @@ function feeds_tamper_install() {
  */
 function feeds_tamper_schema() {
   $schema = array();
-
   $schema['feeds_tamper'] = array(
     'description' => 'Table storing tamper instances.',
     'export' => array(
@@ -62,10 +61,23 @@ function feeds_tamper_schema() {
         'description' => 'A serialized array of options for a Feeds Tamper plugin.',
         'serialize' => TRUE,
       ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'unsigned' => TRUE,
+        'description' => 'The weight of a plugin instance. Plugins are executed in order.',
+      ),
+      'description' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Description of this plugin.',
+      ),
     ),
     'primary key' => array('id'),
   );
-
   return $schema;
 }
 
@@ -74,4 +86,25 @@ function feeds_tamper_schema() {
  */
 function feeds_tamper_uninstall() {
   drupal_uninstall_schema('feeds_tamper');
+  variable_del('default_feeds_tamper');
+}
+
+/**
+ * Add weight field to feeds_tamper table.
+ */
+function feeds_tamper_update_6001(&$sandbox) {
+  $ret = array();
+  $schema = feeds_tamper_schema();
+  db_add_field($ret, 'feeds_tamper', 'weight', $schema['feeds_tamper']['fields']['weight']);
+  return $ret;
+}
+
+/**
+ * Add description field to feeds_tamper table.
+ */
+function feeds_tamper_update_6002(&$sandbox) {
+  $ret = array();
+  $schema = feeds_tamper_schema();
+  db_add_field($ret, 'feeds_tamper', 'description', $schema['feeds_tamper']['fields']['description']);
+  return $ret;
 }
