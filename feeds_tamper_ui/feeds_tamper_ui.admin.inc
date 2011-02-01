@@ -41,7 +41,7 @@ function feeds_tamper_ui_edit_form(&$form_state, $importer) {
   foreach ($mappings as $mapping) {
     $form['mappings'][$mapping['source']] = array(
       '#type' => 'fieldset',
-      '#title' => $mapping['target'],
+      '#title' => check_plain($mapping['source']) . ' -> ' . check_plain($mapping['target']),
       '#tree' => TRUE,
     );
     $form['mappings'][$mapping['source']]['table'] = array();
