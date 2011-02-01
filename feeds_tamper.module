@@ -184,3 +184,10 @@ function feeds_tamper_ctools_plugin_plugins() {
 function feeds_tamper_make_machine($string) {
   return substr(preg_replace('/[^a-z0-9-]/', '_', strtolower($string)), 0, 127);
 }
+
+/**
+ * Implementation of hook_perm().
+ */
+function feeds_tamper_perm() {
+  return array('administer feeds_tamper');
+}

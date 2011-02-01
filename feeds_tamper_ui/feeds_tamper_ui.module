@@ -15,7 +15,8 @@ function feeds_tamper_ui_menu() {
     'file' => 'feeds_tamper_ui.admin.inc',
   );
   $items['admin/build/feeds_tamper/edit/%feeds_importer'] = array(
-    'title' => t('Edit'),
+    'title callback' => 'feeds_tamper_ui_main_title',
+    'title arguments' => array(4),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('feeds_tamper_ui_edit_form', 4),
     'access arguments' => array('administer feeds_tamper'),
@@ -62,6 +63,10 @@ function feeds_tamper_ui_delete_title($instance) {
     return t('Delete plugin: ') . $instance->id;
   }
   return t('Revert plugin: !id?', array('!id' => $instance->id));
+}
+
+function feeds_tamper_ui_main_title($importer) {
+  return t('Configure tamper plugins for: !id', array('!id' => $importer->id));
 }
 
 function feeds_tamper_ui_theme() {
