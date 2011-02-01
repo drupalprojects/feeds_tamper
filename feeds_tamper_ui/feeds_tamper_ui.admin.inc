@@ -22,7 +22,7 @@ function feeds_tamper_ui_select_importer_form(&$form_state) {
     return $form;
   }
   $form['help'] = array(
-    '#value' => t('There are no configured Feeds importers.'),
+    '#value' => t('There are no enabled Feeds importers.'),
   );
   return $form;
 }
@@ -77,7 +77,6 @@ function feeds_tamper_ui_edit_form(&$form_state, $importer) {
           '#type' => 'value',
           '#value' => $data,
         );
-
         $form['mappings'][$mapping['source']]['table'][$instance->id]['weight-' . $instance->id] = array(
           '#type'=>'textfield',
           '#size'=>5,
@@ -105,12 +104,8 @@ function feeds_tamper_ui_edit_form_submit($form, &$form_state) {
         $instance = feeds_tamper_load_instance($id);
         $weight = (int) $value['weight-' . $id];
         $disabled[$id] = !$value['enabled'];
-        $modified = FALSE;
         if ($instance->weight != $weight) {
           $instance->weight = $weight;
-          $modified = TRUE;
-        }
-        if ($modified) {
           ctools_export_crud_save('feeds_tamper', $instance);
         }
       }
