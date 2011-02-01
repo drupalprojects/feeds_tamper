@@ -271,7 +271,8 @@ function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {
     $form['description'] = array(
       '#title' => t('Description'),
       '#type' => 'textfield',
-      '#description' => t('A useful description of what this plugin is doing.')
+      '#description' => t('A useful description of what this plugin is doing.'),
+      '#default_value' => $instance->description,
     );
   }
   foreach ($plugin['form']($importer, $instance->source, $instance->settings) as $key => $form_item) {

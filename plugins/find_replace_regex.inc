@@ -42,16 +42,12 @@ function feeds_tamper_find_replace_regex_validate(&$settings) {
   $settings['limit'] = trim($settings['limit']);
   if (empty($settings['limit'])) {
     $settings['real_limit'] = -1;
-    $limit = -1;
   }
   else {
-    $limit = $settings['limit'];
+    $settings['real_limit'] = $settings['limit'];
   }
-  if (!is_numeric($limit)) {
+  if (!is_numeric($settings['real_limit'])) {
     form_set_error('find_replace_regex][limit', 'Limit must be an integer.');
-  }
-  else {
-    $settings['real_limit'] = intval($settings['limit']);
   }
 }
 
