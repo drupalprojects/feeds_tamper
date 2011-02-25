@@ -1,4 +1,3 @@
-; $Id$
 name = Feeds Tamper Admin UI
 description = Administrative UI for Feeds Tamper module.
 package = Feeds

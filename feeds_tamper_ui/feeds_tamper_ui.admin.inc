@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Build select_importer of available configurations.

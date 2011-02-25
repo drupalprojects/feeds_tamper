@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 $plugin = array(
   'form' => 'feeds_tamper_html_entity_encode_form',

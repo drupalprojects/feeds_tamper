@@ -1,4 +1,3 @@
-; $Id$
 name = Feeds Tamper
 description = Modify feeds data before it gets saved.
 package = Feeds
