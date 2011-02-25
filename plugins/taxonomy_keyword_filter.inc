@@ -1,5 +1,4 @@
 <?php
-// $Id$
 if (module_exists('taxonomy')) {
   $plugin = array(
     'form'     => 'feeds_tamper_taxonomy_keyword_filter_form',

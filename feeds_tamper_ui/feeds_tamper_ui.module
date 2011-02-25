@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 // Implements of hook_menu.
 function feeds_tamper_ui_menu() {

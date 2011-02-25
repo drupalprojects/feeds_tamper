@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Build overview of available configurations.
