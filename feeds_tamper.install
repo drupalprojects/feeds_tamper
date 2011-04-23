@@ -69,7 +69,7 @@ function feeds_tamper_schema() {
       ),
       'description' => array(
         'type' => 'varchar',
-        'length' => 256,
+        'length' => 255,
         'not null' => TRUE,
         'default' => '',
         'description' => 'Description of this plugin.',
