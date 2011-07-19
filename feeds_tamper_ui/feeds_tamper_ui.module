@@ -5,42 +5,40 @@
  */
 function feeds_tamper_ui_menu() {
   $items = array();
-  $items['admin/build/feeds_tamper'] = array(
-    'title' => 'Feed tamper',
-    'description' => 'Configure Feeds tamper to modify incoming feeds data.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('feeds_tamper_ui_select_importer_form'),
-    'access arguments' => array('administer feeds_tamper'),
-    'file' => 'feeds_tamper_ui.admin.inc',
-  );
-  $items['admin/build/feeds_tamper/edit/%feeds_importer'] = array(
+  $items['admin/build/feeds/tamper/list/%feeds_importer'] = array(
     'title callback' => 'feeds_tamper_ui_main_title',
-    'title arguments' => array(4),
+    'title arguments' => array(5),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('feeds_tamper_ui_edit_form', 4),
+    'page arguments' => array('feeds_tamper_ui_list_form', 5),
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
   );
-  $items['admin/build/feeds_tamper/edit/%feeds_importer/add/%'] = array(
-    'title' => t('Add Plugin'),
+  $items['admin/build/feeds/tamper/add/%feeds_importer/%'] = array(
+    'title' => 'Add Plugin',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('feeds_tamper_ui_add_plugin_form', 4, 6),
+    'page arguments' => array('feeds_tamper_ui_add_plugin_form', 5, 6),
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
   );
-  $items['admin/build/feeds_tamper/edit_plugin/%feeds_tamper_plugin_instance'] = array(
+  $items['admin/build/feeds/tamper/edit/%feeds_tamper_plugin_instance'] = array(
     'title callback' => 'feeds_tamper_ui_edit_title',
-    'title arguments' => array(4),
+    'title arguments' => array(5),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('feeds_tamper_ui_edit_plugin_form', 4),
+    'page arguments' => array('feeds_tamper_ui_edit_plugin_form', 5),
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
   );
-  $items['admin/build/feeds_tamper/delete/%feeds_tamper_plugin_instance'] = array(
+  $items['admin/build/feeds/tamper/delete/%feeds_tamper_plugin_instance'] = array(
     'title callback' => 'feeds_tamper_ui_delete_title',
-    'title arguments' => array(4),
+    'title arguments' => array(5),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('feeds_tamper_ui_delete_form', 4),
+    'page arguments' => array('feeds_tamper_ui_delete_form', 5),
+    'access arguments' => array('administer feeds_tamper'),
+    'file' => 'feeds_tamper_ui.admin.inc',
+  );
+  $items['admin/build/feeds/tamper/ajax/%ctools_js'] = array(
+    'page callback' => 'example_test_ajax_callback',
+    'page arguments' => array(5),
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
   );
@@ -53,25 +51,38 @@ function feeds_tamper_plugin_instance_load($instance_id) {
 
 function feeds_tamper_ui_edit_title($instance) {
   if ($instance->export_type == EXPORT_IN_DATABASE) {
-    return t('Edit plugin: ') . $instance->id;
+    return t('Edit: @id', array('@id' => $instance->description));
   }
-  return t('Override plugin: ') . $instance->id;
+  return t('Override: @id', array('@id' => $instance->description));
 }
+
 function feeds_tamper_ui_delete_title($instance) {
   if ($instance->export_type == EXPORT_IN_DATABASE) {
-    return t('Delete plugin: ') . $instance->id;
+    return t('Delete plugin: @id', array('@id', $instance->id));
   }
-  return t('Revert plugin: !id?', array('!id' => $instance->id));
+  return t('Revert plugin: @id', array('@id', $instance->id));
 }
 
 function feeds_tamper_ui_main_title($importer) {
-  return t('Configure tamper plugins for: !id', array('!id' => $importer->id));
+  return t('Tamper plugins: @name', array('@name' => $importer->config['name']));
 }
 
 function feeds_tamper_ui_theme() {
   return array(
-    'feeds_tamper_ui_edit_form' => array(
+    'feeds_tamper_ui_list_form' => array(
       'arguments' => array('form' => NULL),
     ),
   );
+}
+
+function feeds_tamper_ui_form_feeds_ui_overview_form_alter(&$form, &$form_state) {
+  if (!empty($form['enabled'])) {
+    foreach ($form['enabled'] as $id => &$table) {
+      $table['operations']['#value'] .= ' | ' . l(t('Tamper'), 'admin/build/feeds/tamper/list/' . $id);
+    }
+  }
+}
+
+function feeds_tamper_ui_form_feeds_ui_mapping_form_alter(&$form, &$form_state) {
+  $form['help']['#value'] .= l(t('Configure Feeds Tamper'), 'admin/build/feeds/tamper/list/' . $form['#importer']->id);
 }

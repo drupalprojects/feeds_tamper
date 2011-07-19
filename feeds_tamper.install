@@ -76,6 +76,9 @@ function feeds_tamper_schema() {
       ),
     ),
     'primary key' => array('id'),
+    'indexes' => array(
+      'importer' => array('importer'),
+    ),
   );
   return $schema;
 }
@@ -93,8 +96,14 @@ function feeds_tamper_uninstall() {
  */
 function feeds_tamper_update_6001(&$sandbox) {
   $ret = array();
-  $schema = feeds_tamper_schema();
-  db_add_field($ret, 'feeds_tamper', 'weight', $schema['feeds_tamper']['fields']['weight']);
+  $spec = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'unsigned' => TRUE,
+    'description' => 'The weight of a plugin instance. Plugins are executed in order.',
+  );
+  db_add_field($ret, 'feeds_tamper', 'weight', $spec);
   return $ret;
 }
 
@@ -103,7 +112,29 @@ function feeds_tamper_update_6001(&$sandbox) {
  */
 function feeds_tamper_update_6002(&$sandbox) {
   $ret = array();
-  $schema = feeds_tamper_schema();
-  db_add_field($ret, 'feeds_tamper', 'description', $schema['feeds_tamper']['fields']['description']);
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => 'Description of this plugin.',
+  );
+  db_add_field($ret, 'feeds_tamper', 'description', $spec);
+  return $ret;
+}
+
+/**
+ * Add index on importer.
+ */
+function feeds_tamper_update_6003(&$sandbox) {
+  $ret = array();
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => 'Description of this plugin.',
+  );
+  db_add_index($ret, 'feeds_tamper', 'importer', array('importer'));
   return $ret;
 }
