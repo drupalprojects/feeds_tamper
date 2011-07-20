@@ -36,9 +36,8 @@ function feeds_tamper_ui_menu() {
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
   );
-  $items['admin/build/feeds/tamper/ajax/%ctools_js'] = array(
-    'page callback' => 'example_test_ajax_callback',
-    'page arguments' => array(5),
+  $items['admin/build/feeds/tamper/js'] = array(
+    'page callback' => 'feeds_tamper_ui_js',
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
   );

@@ -86,6 +86,7 @@ function feeds_tamper_load_instance($id) {
  * Save plugin instance.
  */
 function feeds_tamper_save_instance($instance) {
+  ctools_include('export');
   return ctools_export_crud_save('feeds_tamper', $instance);
 }
 

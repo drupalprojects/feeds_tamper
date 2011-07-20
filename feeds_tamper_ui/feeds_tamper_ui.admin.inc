@@ -11,6 +11,8 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
   $instances = feeds_tamper_load_by_importer($importer->id, TRUE);
 
   $form = array();
+  $form['mappings'] = array();
+  $form['#importer'] = $importer;
 
   foreach ($mappings as $mapping) {
     $form['mappings'][$mapping['source']] = array(
@@ -95,10 +97,14 @@ function feeds_tamper_ui_list_form_submit($form, &$form_state) {
 function theme_feeds_tamper_ui_list_form($form) {
   $header = array(t('Description'), t('Plugin'), t('Status'), t('Operations'), t('Enabled'), t('Weight'));
   $output = '';
-  foreach (element_children($form['mappings']) as $source) {
+  $mappings = element_children($form['mappings']);
+  if (empty($mappings)) {
+    drupal_set_message(t('There are no !mappings defined for this importer.', array('!mappings' => l(t('mappings'), 'admin/build/feeds/edit/' . $form['#importer']->id . '/mapping'))), 'warning');
+    return $output;
+  }
+  foreach ($mappings as $source) {
     $table_rows = array();
     $children = element_children($form['mappings'][$source]['table']);
-
     if (empty($children)) {
       $help_text = t('No plugins defined for this source.');
       $table_rows[] = array('data' => array(array('data' => $help_text, 'colspan' => 6)));
@@ -110,15 +116,15 @@ function theme_feeds_tamper_ui_list_form($form) {
         $this_row[] = drupal_render($form['mappings'][$source]['table'][$id]['weight-' . $id]);
         $table_rows[] = array('data' => $this_row, 'class' => 'draggable');
       }
-      $table_id = preg_replace('/[^a-z0-9-]/', '',
-        preg_replace('/_+/', '-',
-          strtolower($source . '-table')
-        )
-      );
-      $table = theme_table($header, $table_rows, array('id' => $table_id));
-      $form['mappings'][$source]['#value'] = $table;
-      drupal_add_tabledrag($table_id, 'order', 'sibling', 'weight');
     }
+    $table_id = preg_replace('/[^a-z0-9-]/', '',
+      preg_replace('/_+/', '-',
+        strtolower($source . '-table')
+      )
+    );
+    $table = theme_table($header, $table_rows, array('id' => $table_id));
+    $form['mappings'][$source]['#value'] = $table;
+    drupal_add_tabledrag($table_id, 'order', 'sibling', 'weight');
     $form['mappings'][$source]['#value'] .= $form['mappings'][$source]['add_link']['#value'];
     unset($form['mappings'][$source]['add_link']);
     $output .= drupal_render($form['mappings'][$source]);
@@ -148,9 +154,27 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     asort($p);
   }
 
-  $machine_name = 'keyword_filter';
-  if (!empty($form_state['values']['plugin_id'])) {
-    $machine_name = $form_state['values']['plugin_id'];
+  $form = array();
+  $form['#cache'] = TRUE;
+  dpm($form_state);
+
+  if (isset($form_state['values'])) {
+    // $form_state['storage'] must be initialized for array_smart_merge() to
+    // work.
+    if (!isset($form_state['storage'])) {
+      $form_state['storage'] = array();
+    }
+    $form_state['storage'] = array_smart_merge($form_state['storage'], $form_state['values']);
+  }
+  //$form['#submit'][] = 'ahah_helper_real_submit';
+
+  //ahah_helper_register($form, $form_state);
+
+  if (!isset($form_state['storage']['plugin_id'])) {
+    $machine_name = 'keyword_filter';
+  }
+  else{
+    $machine_name = $form_state['storage']['plugin_id'];
   }
 
   $plugin = feeds_tamper_get_plugin($machine_name);
@@ -163,23 +187,33 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#options' => $plugins,
     '#default_value' => '',
     '#tree' => TRUE,
-    '#ajax' => array(
-      'callback' => 'feeds_tamper_ajax_callback',
-      'wrapper' => 'feeds-tamper-plugin',
+    '#ahah' => array(
+      'event'   => 'change',
+      // This is the "magical path". Note that the parameter is an array of
+      // the parents of the form item of the wrapper div!
+      'path'    => 'admin/build/feeds/tamper/js',
+      'wrapper' => 'plugin-wrapper',
     ),
-    '#suffix' => '<br />',
+    '#suffix' => '<br/ >',
   );
-  $form['plugin']['#prefix'] = '<div id="feeds-tamper-plugin">';
+  $form['update'] = array(
+    '#type'  => 'submit',
+    '#value' => t('Update plugin form'),
+    '#submit' => array('feeds_tamper_ui_ajax_submit'),
+    '#attributes' => array('class' => 'no-js'),
+  );
+  $form['plugin']['#prefix'] = '<div id="plugin-wrapper">';
   $form['plugin']['#suffix'] = '</div>';
 
   $form['plugin']['description'] = array(
     '#title' => t('Description'),
     '#type' => 'textfield',
-    '#default_value' => $plugin['default description'] ? $plugin['default description'] : $plugin['name'],
-    '#required' => TRUE,
+    '#default_value' => !empty($plugin['default description']) ? $plugin['default description'] : $plugin['name'],
+    //'#required' => TRUE,
     '#description' => t('A useful description of what this plugin is doing.'),
     '#tree' => TRUE,
     '#attributes' => array('class' => 'feed-name'),
+    '#required' => TRUE,
   );
   $form['plugin']['id'] = array(
     '#title' => t('Machine name'),
@@ -189,9 +223,10 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#disabled' => FALSE,
     '#tree' => TRUE,
     '#attributes' => array('class' => 'feed-id'),
+    '#required' => TRUE,
   );
   $form['plugin']['settings'] = array(
-    '#title' => t('Configure $name', array('@name' => $plugin['name'])),
+    '#title' => t('Configure @name', array('@name' => $plugin['name'])),
     '#type' => 'fieldset',
     '#tree' => TRUE,
   );
@@ -204,50 +239,43 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   return $form;
 }
 
+function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
+  // If ajax call, reset some $_POST values.
+  if ($form_state['triggering_element']['#type'] == 'select') {
+    unset($form_state['input']['description']);
+    unset($form_state['input']['settings']);
+    unset($form_state['input']['id']);
+  }
+  if (1 == 2) {
+    $plugin_id = $form_state['values']['plugin_id'];
+    $plugin = feeds_tamper_get_plugin($plugin_id);
+    if ($plugin['validate'] && isset($form_state['values']['settings'])) {
+      $plugin['validate']($form_state['values']['settings']);
+    }
+    $form_state['values']['id'] =
+      $form_state['importer']->id .
+      '-' .
+      feeds_tamper_make_machine($form_state['source']) .
+      '-' .
+      $form_state['values']['id'];
+  }
+}
+
 function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
+  unset($form_state['storage']);
   $obj = new stdClass();
   $obj->plugin_id = $form_state['values']['plugin_id'];
-  $obj->settings = $form_state['values'][$obj->plugin_id];
+  if (isset($form_state['values']['settings'])) {
+    $obj->settings = $form_state['values']['settings'];
+  }
   $obj->importer = $form_state['importer']->id;
   $obj->source = $form_state['source'];
   $obj->export_type = NULL;
-  $obj->description = $form_state['storage']['description'];
-  $obj->id = $form_state['storage']['id'];
-  $plugin = feeds_tamper_get_plugin($obj->plugin_id);
+  $obj->description = $form_state['values']['description'];
+  $obj->id = $form_state['values']['id'];
 
-  ctools_export_crud_save('feeds_tamper', $obj);
-  drupal_goto('admin/build/feeds_tamper/edit/' . $obj->importer);
-}
-
-function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
-  $plugin_id = $form_state['values']['plugin_id'];
-  $plugin = feeds_tamper_get_plugin($plugin_id);
-  if ($plugin['validate']) {
-    $plugin['validate']($form_state['values'][$plugin_id]);
-  }
-  if ($plugin['description']) {
-    $form_state['storage']['description'] = $plugin['description']($form_state['values'][$plugin_id]);
-  }
-  else {
-    $form_state['storage']['description'] = trim($form_state['values'][$plugin_id]['description']);
-    if (!empty($form_state['storage']['description'])) {
-      unset($form_state['values'][$plugin_id]['description']);
-    }
-  }
-  if ($plugin['machine_name']) {
-    $form_state['storage']['id'] = $form_state['importer']->id .
-    '_' . feeds_tamper_make_machine($form_state['source']) .
-    '_' . $plugin['machine_name']($form_state['values'][$plugin_id]);
-  }
-  else {
-    $form_state['storage']['id'] = trim($form_state['values'][$plugin_id]['id']);
-    if (empty($form_state['storage']['id'])) {
-      form_set_error($plugin_id . '][id', t('Machine name is required.'));
-    }
-    else {
-      unset($form_state['values'][$plugin_id]['id']);
-    }
-  }
+  feeds_tamper_save_instance($obj);
+  $form_state['redirect'] = 'admin/structure/feeds/tamper/list/' . $obj->importer;
 }
 
 function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {
@@ -323,19 +351,28 @@ function feeds_tamper_ui_delete_form_submit($form, &$form_state) {
 /**
  * Ajax callback for add form.
  */
-function example_test_ajax_callback($js = FALSE) {
-  $output = t('<p>Lorem ipsum dolor sit amet...</p>');
+function feeds_tamper_ui_js() {
+  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_build_id = $_POST['form_build_id'];
+  $form = form_get_cache($form_build_id, $form_state);
+  $args = $form['#parameters'];
+  $form_id = array_shift($args);
+  $form_state['post'] = $form['#post'] = $_POST;
+  $form['#programmed'] = $form['#redirect'] = FALSE;
+  $form_state['submitted'] = TRUE;
+  drupal_process_form($form_id, $form, $form_state);
+  $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+  $plugin_form = $form['plugin'];
+  unset($plugin_form['#prefix'], $plugin_form['#suffix']); // Prevent duplicate wrappers.
+  $javascript = drupal_add_js(NULL, NULL, 'header');
+  $settings = call_user_func_array('array_merge_recursive', $javascript['setting']);
+  drupal_json(array(
+    'status'   => TRUE,
+    'data'     => theme('status_messages') . drupal_render($plugin_form),
+    'settings' => $settings,
+  ));
+}
 
-  if ($js) {
-    ctools_include('ajax');
-
-    $commands = array();
-    $commands[] = ctools_ajax_command_replace('#feeds-tamper-plugin', $output);
-
-    ctools_ajax_render($commands);
-    // above command will exit().
-  }
-  else {
-    return $output;
-  }
+function feeds_tamper_ui_ajax_submit($form, &$form_state) {
+  $form_state['rebuild'] = TRUE;
 }
