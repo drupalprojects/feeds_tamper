@@ -140,8 +140,8 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   drupal_set_breadcrumb($crumb);
 
   // Set importer and source for use in validate and submit.
-  $form_state['importer'] = $importer;
-  $form_state['source'] = $source;
+  $form['#importer'] = $importer;
+  $form['#source'] = $source;
 
   // Build plugin select list.
   $feeds_tamper_plugins = feeds_tamper_get_plugins();
@@ -155,26 +155,10 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   }
 
   $form = array();
-  $form['#cache'] = TRUE;
-  dpm($form_state);
 
-  if (isset($form_state['values'])) {
-    // $form_state['storage'] must be initialized for array_smart_merge() to
-    // work.
-    if (!isset($form_state['storage'])) {
-      $form_state['storage'] = array();
-    }
-    $form_state['storage'] = array_smart_merge($form_state['storage'], $form_state['values']);
-  }
-  //$form['#submit'][] = 'ahah_helper_real_submit';
-
-  //ahah_helper_register($form, $form_state);
-
-  if (!isset($form_state['storage']['plugin_id'])) {
-    $machine_name = 'keyword_filter';
-  }
-  else{
-    $machine_name = $form_state['storage']['plugin_id'];
+  $machine_name = key(reset($plugins));
+  if (!empty($form_state['values']['plugin_id'])) {
+    $machine_name = $form_state['values']['plugin_id'];
   }
 
   $plugin = feeds_tamper_get_plugin($machine_name);
@@ -188,10 +172,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#default_value' => '',
     '#tree' => TRUE,
     '#ahah' => array(
-      'event'   => 'change',
-      // This is the "magical path". Note that the parameter is an array of
-      // the parents of the form item of the wrapper div!
-      'path'    => 'admin/build/feeds/tamper/js',
+      'path'    => 'feeds_tamper/js',
       'wrapper' => 'plugin-wrapper',
     ),
     '#suffix' => '<br/ >',
@@ -209,7 +190,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#title' => t('Description'),
     '#type' => 'textfield',
     '#default_value' => !empty($plugin['default description']) ? $plugin['default description'] : $plugin['name'],
-    //'#required' => TRUE,
+    '#required' => TRUE,
     '#description' => t('A useful description of what this plugin is doing.'),
     '#tree' => TRUE,
     '#attributes' => array('class' => 'feed-name'),
@@ -240,42 +221,48 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
 }
 
 function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
+  //dpm('validate');
+  //dpm($form);
+  //dpm($form_state);
   // If ajax call, reset some $_POST values.
-  if ($form_state['triggering_element']['#type'] == 'select') {
-    unset($form_state['input']['description']);
-    unset($form_state['input']['settings']);
-    unset($form_state['input']['id']);
-  }
-  if (1 == 2) {
-    $plugin_id = $form_state['values']['plugin_id'];
-    $plugin = feeds_tamper_get_plugin($plugin_id);
-    if ($plugin['validate'] && isset($form_state['values']['settings'])) {
-      $plugin['validate']($form_state['values']['settings']);
-    }
-    $form_state['values']['id'] =
-      $form_state['importer']->id .
-      '-' .
-      feeds_tamper_make_machine($form_state['source']) .
-      '-' .
-      $form_state['values']['id'];
-  }
+  //if ($form_state['triggering_element']['#type'] == 'select') {
+  //  unset($form_state['input']['description']);
+  //  unset($form_state['input']['settings']);
+  //  unset($form_state['input']['id']);
+  //}
+  //if (1 == 2) {
+  //  $plugin_id = $form_state['values']['plugin_id'];
+  //  $plugin = feeds_tamper_get_plugin($plugin_id);
+  //  if ($plugin['validate'] && isset($form_state['values']['settings'])) {
+  //    $plugin['validate']($form_state['values']['settings']);
+  //  }
+  //  $form_state['values']['id'] =
+  //    $form['#importer']->id .
+  //    '-' .
+  //    feeds_tamper_make_machine($form_state['source']) .
+  //    '-' .
+  //    $form_state['values']['id'];
+  //}
 }
 
 function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
-  unset($form_state['storage']);
-  $obj = new stdClass();
-  $obj->plugin_id = $form_state['values']['plugin_id'];
-  if (isset($form_state['values']['settings'])) {
-    $obj->settings = $form_state['values']['settings'];
-  }
-  $obj->importer = $form_state['importer']->id;
-  $obj->source = $form_state['source'];
-  $obj->export_type = NULL;
-  $obj->description = $form_state['values']['description'];
-  $obj->id = $form_state['values']['id'];
-
-  feeds_tamper_save_instance($obj);
-  $form_state['redirect'] = 'admin/structure/feeds/tamper/list/' . $obj->importer;
+  //dpm('submit');
+  //dpm($form);
+  //dpm($form_state);
+  //unset($form_state['storage']);
+  //$obj = new stdClass();
+  //$obj->plugin_id = $form_state['values']['plugin_id'];
+  //if (isset($form_state['values']['settings'])) {
+  //  $obj->settings = $form_state['values']['settings'];
+  //}
+  //$obj->importer = $form['#importer']->id;
+  //$obj->source = $form['#source'];
+  //$obj->export_type = NULL;
+  //$obj->description = $form_state['values']['description'];
+  //$obj->id = $form_state['values']['id'];
+  //
+  //feeds_tamper_save_instance($obj);
+  //$form_state['redirect'] = 'admin/structure/feeds/tamper/list/' . $obj->importer;
 }
 
 function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {
@@ -360,6 +347,16 @@ function feeds_tamper_ui_js() {
   $form_state['post'] = $form['#post'] = $_POST;
   $form['#programmed'] = $form['#redirect'] = FALSE;
   $form_state['submitted'] = TRUE;
+  if (!isset($_POST['op'])) {
+    // For the default "{$form_id}_validate" and "{$form_id}_submit" handlers.
+    $form['#validate'] = NULL;
+    $form['#submit'] = NULL;
+    // For customly set #validate and #submit handlers.
+    $form_state['submit_handlers'] = NULL;
+    $form_state['validate_handlers'] = NULL;
+    // Disable #required and #element_validate validation.
+  }
+  //dpm($form);
   drupal_process_form($form_id, $form, $form_state);
   $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
   $plugin_form = $form['plugin'];

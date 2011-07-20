@@ -36,10 +36,11 @@ function feeds_tamper_ui_menu() {
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
   );
-  $items['admin/build/feeds/tamper/js'] = array(
+  $items['feeds_tamper/js'] = array(
     'page callback' => 'feeds_tamper_ui_js',
     'access arguments' => array('administer feeds_tamper'),
     'file' => 'feeds_tamper_ui.admin.inc',
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
