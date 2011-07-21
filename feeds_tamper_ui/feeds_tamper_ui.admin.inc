@@ -7,6 +7,7 @@
  */
 
 function feeds_tamper_ui_list_form(&$form_state, $importer) {
+  drupal_add_css(drupal_get_path('module', 'feeds_tamper_ui') . '/feeds_tamper_ui.css');
   $mappings = $importer->processor->config['mappings'];
   $instances = feeds_tamper_load_by_importer($importer->id, TRUE);
 
@@ -16,9 +17,7 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
 
   foreach ($mappings as $mapping) {
     $form['mappings'][$mapping['source']] = array(
-      '#type' => 'fieldset',
       '#title' => check_plain($mapping['source']) . ' -> ' . check_plain($mapping['target']),
-      '#collapsible' => TRUE,
       '#tree' => TRUE,
     );
     $form['mappings'][$mapping['source']]['table'] = array();
@@ -46,17 +45,12 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
       $instance->disabled = !isset($instance->disabled) ? FALSE : $instance->disabled;
       $checkbox = array('#type' => 'checkbox', '#default_value' => !$instance->disabled);
       $form['mappings'][$mapping['source']]['table'][$instance->id]['enabled'] = $checkbox;
-      $data = array(
-        !empty($instance->description) ? check_plain($instance->description) : $instance->id,
-        $plugin['name'],
-        $status,
-        l(t($edit), 'admin/build/feeds/tamper/edit/' . $instance->id) .
-        (empty($delete) ? '' :  ' | ' . l(t($delete), 'admin/build/feeds/tamper/delete/'. $instance->id)),
-      );
-      $form['mappings'][$mapping['source']]['table'][$instance->id]['data'] = array(
-        '#type' => 'value',
-        '#value' => $data,
-      );
+      $form['mappings'][$mapping['source']]['table'][$instance->id]['description']['#value'] = !empty($instance->description) ? check_plain($instance->description) : $instance->id;
+      $form['mappings'][$mapping['source']]['table'][$instance->id]['name']['#value'] = $plugin['name'];
+      $form['mappings'][$mapping['source']]['table'][$instance->id]['status']['#value'] = $status;
+      $form['mappings'][$mapping['source']]['table'][$instance->id]['edit']['#value'] =
+        l(t($edit), 'admin/build/feeds/tamper/edit/' . $instance->id) . (empty($delete) ? '' :  ' | ' .
+        l(t($delete), 'admin/build/feeds/tamper/delete/' . $instance->id));
       $form['mappings'][$mapping['source']]['table'][$instance->id]['weight-' . $instance->id] = array(
         '#type' => 'textfield',
         '#size' => 5,
@@ -64,7 +58,8 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
         '#attributes' => array('class' => 'weight'),
       );
     }
-    $add = l(t('Add plugin'), 'admin/build/feeds/tamper/add/' . $importer->id . '/' . $mapping['source']);
+    $l = 'admin/build/feeds/tamper/add/' . $importer->id . '/' . $mapping['source'];
+    $add = l(t('Add plugin'), $l, array('attributes' => array('class' => 'feeds-tamper-add')));
     $form['mappings'][$mapping['source']]['add_link']['#value'] = $add;
   }
   $form['submit'] = array(
@@ -95,39 +90,65 @@ function feeds_tamper_ui_list_form_submit($form, &$form_state) {
 }
 
 function theme_feeds_tamper_ui_list_form($form) {
-  $header = array(t('Description'), t('Plugin'), t('Status'), t('Operations'), t('Enabled'), t('Weight'));
   $output = '';
   $mappings = element_children($form['mappings']);
   if (empty($mappings)) {
     drupal_set_message(t('There are no !mappings defined for this importer.', array('!mappings' => l(t('mappings'), 'admin/build/feeds/edit/' . $form['#importer']->id . '/mapping'))), 'warning');
-    return $output;
+    // Stop save button from appearing. I'm obviously a theming expert.
+    return '<div></div>';
   }
   foreach ($mappings as $source) {
-    $table_rows = array();
+    $table_rows = $disabled_rows = array();
+    $table_id = feeds_tamper_make_machine($source) . '-table';
+    $table_id_disabled = $table_id . '-disabled';
+    $header = array(t('Description'), t('Weight'), t('Plugin'), t('Status'), t('Operations'), t('Enabled'));
     $children = element_children($form['mappings'][$source]['table']);
     if (empty($children)) {
       $help_text = t('No plugins defined for this source.');
       $table_rows[] = array('data' => array(array('data' => $help_text, 'colspan' => 6)));
+      $header = array(t('Description'), t('Plugin'), t('Status'), t('Operations'), t('Enabled'));
     }
     else {
       foreach ($children as $id) {
-        $this_row = $form['mappings'][$source]['table'][$id]['data']['#value'];
-        $this_row[] = drupal_render($form['mappings'][$source]['table'][$id]['enabled']);
-        $this_row[] = drupal_render($form['mappings'][$source]['table'][$id]['weight-' . $id]);
-        $table_rows[] = array('data' => $this_row, 'class' => 'draggable');
+        $disabled = empty($form['mappings'][$source]['table'][$id]['enabled']['#default_value']);
+        if (!$disabled) {
+          $this_row = array();
+          $this_row[] = $form['mappings'][$source]['table'][$id]['description']['#value'];
+          $this_row[] = drupal_render($form['mappings'][$source]['table'][$id]['weight-' . $id]);
+          $this_row[] = $form['mappings'][$source]['table'][$id]['name']['#value'];
+          $this_row[] = $form['mappings'][$source]['table'][$id]['status']['#value'];
+          $this_row[] = $form['mappings'][$source]['table'][$id]['edit']['#value'];
+          $this_row[] = drupal_render($form['mappings'][$source]['table'][$id]['enabled']);
+          $table_rows[] = array('data' => $this_row, 'class' => 'draggable');
+        }
+        else {
+          $this_row = array();
+          $this_row[] = $form['mappings'][$source]['table'][$id]['description']['#value'];
+          $this_row[] = '';
+          $this_row[] = $form['mappings'][$source]['table'][$id]['name']['#value'];
+          $this_row[] = $form['mappings'][$source]['table'][$id]['status']['#value'];
+          $this_row[] = strip_tags($form['mappings'][$source]['table'][$id]['edit']['#value']);
+          $this_row[] = drupal_render($form['mappings'][$source]['table'][$id]['enabled']);
+          $disabled_rows[] = array('data' => $this_row, 'class' => 'disabled');
+        }
       }
+      drupal_add_tabledrag($table_id, 'order', 'sibling', 'weight');
     }
-    $table_id = preg_replace('/[^a-z0-9-]/', '',
-      preg_replace('/_+/', '-',
-        strtolower($source . '-table')
-      )
-    );
-    $table = theme_table($header, $table_rows, array('id' => $table_id));
-    $form['mappings'][$source]['#value'] = $table;
-    drupal_add_tabledrag($table_id, 'order', 'sibling', 'weight');
-    $form['mappings'][$source]['#value'] .= $form['mappings'][$source]['add_link']['#value'];
+    //$table_rows = array_merge($table_rows, $disabled_rows);
+    $add = $form['mappings'][$source]['add_link']['#value'];
+    unset($form['mappings'][$source]['table']);
     unset($form['mappings'][$source]['add_link']);
-    $output .= drupal_render($form['mappings'][$source]);
+    $table_rows = array_merge($table_rows, $disabled_rows);
+    $table_rows[] = array('data' => array(array('data' => $add, 'colspan' => 6)), 'class' => 'feeds-tamper-add');
+    $table = theme_table($header, $table_rows, array('id' => $table_id), $form['mappings'][$source]['#title']);
+    //$disabled_table = theme_table(NULL, $disabled_rows, NULL, t('Disabled'));
+    $form['mappings'][$source]['table']['#value'] = $table;
+    //if (!empty($disabled_rows)) {
+    //  $form['mappings'][$source]['disabled_table']['#value'] = $disabled_table;
+    //}
+    //$form['mappings'][$source]['add_link']['add_link']['#value'] = $add;
+    $form['mappings'][$source]['#prefix'] = '<div class="feeds-tamper-table">';
+    $form['mappings'][$source]['#suffix'] = '</div>';
   }
   $output .= drupal_render($form);
   return $output;
@@ -189,7 +210,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   $form['plugin']['description'] = array(
     '#title' => t('Description'),
     '#type' => 'textfield',
-    '#default_value' => !empty($plugin['default description']) ? $plugin['default description'] : $plugin['name'],
+    '#default_value' => !empty($plugin['default description']) ? t($plugin['default description']) : t($plugin['name']),
     '#required' => TRUE,
     '#description' => t('A useful description of what this plugin is doing.'),
     '#tree' => TRUE,
