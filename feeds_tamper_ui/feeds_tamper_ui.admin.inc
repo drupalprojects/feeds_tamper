@@ -190,8 +190,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#title' => 'The plugin to add',
     '#type' => 'select',
     '#options' => $plugins,
-    '#default_value' => '',
-    '#tree' => TRUE,
+    '#default_value' => $machine_name,
     '#ahah' => array(
       'path'    => 'feeds_tamper/js',
       'wrapper' => 'plugin-wrapper',
@@ -200,33 +199,30 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   );
   $form['update'] = array(
     '#type'  => 'submit',
-    '#value' => t('Update plugin form'),
+    '#value' => t('Choose'),
     '#submit' => array('feeds_tamper_ui_ajax_submit'),
     '#attributes' => array('class' => 'no-js'),
   );
-  $form['plugin']['#prefix'] = '<div id="plugin-wrapper">';
-  $form['plugin']['#suffix'] = '</div>';
-
-  $form['plugin']['description'] = array(
+  $form['description'] = array(
     '#title' => t('Description'),
     '#type' => 'textfield',
     '#default_value' => !empty($plugin['default description']) ? t($plugin['default description']) : t($plugin['name']),
     '#required' => TRUE,
     '#description' => t('A useful description of what this plugin is doing.'),
-    '#tree' => TRUE,
     '#attributes' => array('class' => 'feed-name'),
-    '#required' => TRUE,
   );
-  $form['plugin']['id'] = array(
+  $form['id'] = array(
     '#title' => t('Machine name'),
     '#type' => 'textfield',
-    '#default_value' => '',
+    '#default_value' => feeds_tamper_make_machine($form['description']['#default_value']),
     '#maxlength' => 32,
-    '#disabled' => FALSE,
-    '#tree' => TRUE,
     '#attributes' => array('class' => 'feed-id'),
     '#required' => TRUE,
   );
+  // Ajax wrapper.
+  $form['plugin']['#prefix'] = '<div id="plugin-wrapper">';
+  $form['plugin']['#suffix'] = '</div>';
+
   $form['plugin']['settings'] = array(
     '#title' => t('Configure @name', array('@name' => $plugin['name'])),
     '#type' => 'fieldset',
@@ -269,10 +265,12 @@ function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
   $obj->export_type = NULL;
   $obj->description = $form_state['values']['description'];
   $obj->id = $form_state['values']['id'];
+  // Allow redirects.
   unset($form_state['storage']);
 
   feeds_tamper_save_instance($obj);
   $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $obj->importer;
+  drupal_set_message(t('Plugin %description was successfully added to %source.', array('%description' => $obj->description, '%source' => $obj->source)));
 }
 
 function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {

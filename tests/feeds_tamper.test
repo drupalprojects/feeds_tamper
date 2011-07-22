@@ -1,0 +1,113 @@
+<?php
+
+/**
+ * @file
+ * Tests for feeds_tamper.module.
+ */
+
+/**
+ * Test Feeds Tamper.
+ */
+class FeedsTamperWebTestCase extends FeedsWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Feeds Tamper',
+      'description' => 'Regression tests for Feeds Tamper.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+  public function setUp() {
+    parent::setUp(array('feeds_tamper', 'feeds_tamper_ui', 'devel'), array('administer feeds_tamper'));
+    // Set the front page to show 30 nodes so we can easily see what is aggregated.
+    $edit = array('default_nodes_main' => 30);
+    $this->drupalPost('admin/content/node-settings', $edit, 'Save configuration');
+  }
+
+  public function testBasic() {
+    $this->createImporterConfiguration();
+    $this->addMappings('syndication',
+      array(
+        array(
+          'source' => 'title',
+          'target' => 'title',
+          'unique' => FALSE,
+        ),
+        array(
+          'source' => 'guid',
+          'target' => 'guid',
+          'unique' => TRUE,
+        ),
+        array(
+          'source' => 'description',
+          'target' => 'body',
+          'unique' => FALSE,
+        ),
+      )
+    );
+
+    // Check that tamper operation exists on feeds page.
+    $this->drupalGet('admin/build/feeds/list');
+    $this->assertText('Edit | Export | Clone | Delete | Tamper');
+    // Check that configure link exists on mappings page.
+    $this->drupalGet('admin/build/feeds/edit/syndication/mapping');
+    $this->assertRaw('<a href="/admin/build/feeds/tamper/list/syndication">Configure Feeds Tamper</a>');
+    // Check help text when there are no mappings.
+    $this->drupalGet('admin/build/feeds/tamper/list/syndication');
+    $this->assertRaw('Configure plugins to modify Feeds data before it gets saved. Each <a href="/admin/build/feeds/edit/syndication/mapping">mapping</a> can be manipulated individually.');
+    // Test basic plugin adding.
+    $settings = array(
+      'settings[mode]' => 0,
+    );
+    $id = $this->addTamperPlugin('syndication', 'title', 'convert_case', $settings);
+    // Create feed node, running import automatically.
+    $this->createFeedNode();
+    // Assert that all titles were uppercased.
+    $this->drupalGet('node');
+    $this->assertUppercaseDevseedFeedContent();
+    $this->toggleTamperPlugin('syndication', 'title', $id);
+  }
+
+  function addTamperPlugin($importer_id, $source, $plugin_id, $settings, $description = NULL, $id = NULL) {
+    $plugin = feeds_tamper_get_plugin($plugin_id);
+    $default_description = !empty($plugin['default description']) ? $plugin['default description'] : $plugin['name'];
+    $default_id = feeds_tamper_make_machine($default_description);
+    $url = 'admin/build/feeds/tamper/add/' . $importer_id . '/' . $source;
+    $this->drupalPost($url, array('plugin_id' => $plugin_id), 'Choose');
+
+    // Check that default values were added to form.
+    $this->assertFieldByName('id', $default_id);
+    $this->assertFieldByName('description', $default_description);
+    // Set settings.
+    $edit = array('plugin_id' => $plugin_id);
+    if (!empty($description)) {
+      $edit['description'] = $description;
+    }
+    if (!empty($id)) {
+      $edit['id'] = $id;
+    }
+    $this->drupalPost(NULL, $edit + $settings, 'Add');
+    $description = !empty($description) ? $description : $default_description;
+    $this->assertText('Plugin ' . $description . ' was successfully added to ' . $source . '.');
+    return !empty($id) ? $id : $default_id;
+  }
+
+  function toggleTamperPlugin($importer_id, $source, $id, $enable = FALSE) {
+    $url = 'admin/build/feeds/tamper/list/' . $importer_id;
+    $name = $source . '[table][' . $importer_id . '-' . $source . '-' . $id . '][enabled]';
+    $this->drupalPost($url, array($name => $enable), 'Save changes');
+    $this->assertFieldByName($name, $enable);
+  }
+
+  function assertUppercaseDevseedFeedContent() {
+    $this->assertText('OPEN ATRIUM TRANSLATION WORKFLOW: TWO WAY TRANSLATION UPDATES');
+    $this->assertText("PERU&#039;S SOFTWARE FREEDOM DAY: IMPRESSIONS &amp; PHOTOS");
+    $this->assertText('WEEK IN DC TECH: SEPTEMBER 21 EDITION');
+    $this->assertText('INTEGRATING THE SITEMINDER ACCESS SYSTEM IN AN OPEN ATRIUM-BASED INTRANET');
+    $this->assertText('OPEN DATA FOR MICROFINANCE: THE NEW MIXMARKET.ORG');
+    $this->assertText('WEEK IN DC TECH: SEPTEMBER 28TH EDITION');
+    $this->assertText('SEPTEMBER GEODC MEETUP TONIGHT');
+    $this->assertText('MAPPING INNOVATION AT THE WORLD BANK WITH OPEN ATRIUM');
+    $this->assertText('WEEK IN DC TECH: OCTOBER 5TH EDITION');
+    $this->assertText('OPEN ATRIUM TRANSLATION WORKFLOW: TWO WAY TRANSLATION UPDATES');
+  }
+}
