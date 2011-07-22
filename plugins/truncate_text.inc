@@ -3,8 +3,6 @@
 $plugin = array(
   'form' => 'feeds_tamper_truncate_text_form',
   'callback' => 'feeds_tamper_truncate_text_callback',
-  'description' => 'feeds_tamper_truncate_text_description',
-  'machine_name' => 'feeds_tamper_truncate_text_machine_name',
   'validate' => 'feeds_tamper_truncate_text_validate',
   'name' => 'Truncate',
   'multi' => 'loop',
@@ -28,17 +26,6 @@ function feeds_tamper_truncate_text_form($importer, $element_key, $settings) {
   return $form;
 }
 
-function feeds_tamper_truncate_text_machine_name($settings) {
-  $text = 'truncate_text_to_' . $settings['num_char'] . '_characters';
-  $text .= $settings['ellipses'] ? '_with_ellipses' : '';
-  return $text;
-}
-
-function feeds_tamper_truncate_text_description($settings) {
-  $desc = 'Truncate to ' . $settings['num_char'] . ' characters';
-  $desc .= $settings['ellipses'] ? ' with ellipses.' : '.';
-  return $desc;
-}
 function feeds_tamper_truncate_text_validate($settings) {
   $settings['num_char'] = trim($settings['num_char']);
   if (!ctype_digit($settings['num_char'])) {

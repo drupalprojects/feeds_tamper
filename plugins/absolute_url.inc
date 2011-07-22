@@ -5,8 +5,6 @@ $plugin = array(
   'callback' => 'feeds_tamper_absolute_url_callback',
   'name' => 'Make URLs absolute',
   'category' => 'HTML',
-  'description' => 'feeds_tamper_absolute_url_description',
-  'machine_name' => 'feeds_tamper_absolute_url_machine_name',
 );
 
 function feeds_tamper_absolute_url_form($importer, $element_key, $settings) {
@@ -16,14 +14,6 @@ function feeds_tamper_absolute_url_form($importer, $element_key, $settings) {
     '#value' => t('Make URLs in markup absolute. (i.e. ' . $links . ').'),
   );
   return $form;
-}
-
-function feeds_tamper_absolute_url_description($settings) {
-  return 'Make URLs absolute.';
-}
-
-function feeds_tamper_absolute_url_machine_name($settings) {
-  return 'make_urls_absolute';
 }
 
 /**

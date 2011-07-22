@@ -7,7 +7,6 @@ $plugin = array(
   'name' => 'Explode',
   'multi' => 'skip',
   'category' => 'List',
-  'description' => 'feeds_tamper_explode_description',
 );
 
 function feeds_tamper_explode_form($importer, $element_key, $settings) {
@@ -38,15 +37,6 @@ function feeds_tamper_explode_validate(&$settings) {
   if (!is_numeric($settings['limit'])) {
     form_set_error('explode][limit', t('Limit must be an integer.'));
   }
-}
-
-function feeds_tamper_explode_description($settings) {
-  $num = !empty($settings['limit']) ? $settings['limit'] : '';
-  $text = 'Break text into items at every "' . check_plain($settings['separator']) . '".';
-  if ($settings['limit']) {
-    $text .= ' Limit to ' . $settings['limit'] . ' items.';
-  }
-  return $text;
 }
 
 function feeds_tamper_explode_callback($source, $item_key, $element_key, &$field, $settings) {
