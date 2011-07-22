@@ -87,6 +87,7 @@ function feeds_tamper_ui_list_form_submit($form, &$form_state) {
     }
   }
   variable_set('default_feeds_tamper', $disabled);
+  drupal_set_message(t('Your changes have been saved.'));
 }
 
 function theme_feeds_tamper_ui_list_form($form) {

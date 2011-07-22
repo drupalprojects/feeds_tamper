@@ -9,6 +9,7 @@
  * Test Feeds Tamper.
  */
 class FeedsTamperWebTestCase extends FeedsWebTestCase {
+
   public static function getInfo() {
     return array(
       'name' => 'Feeds Tamper',
@@ -17,7 +18,9 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     );
   }
   public function setUp() {
-    parent::setUp(array('feeds_tamper', 'feeds_tamper_ui', 'devel'), array('administer feeds_tamper'));
+    $this->feeds_base = 'admin/build/feeds';
+    $this->base_url = $this->feeds_base . '/tamper';
+    parent::setUp(array('feeds_tamper', 'feeds_tamper_ui'), array('administer feeds_tamper'));
     // Set the front page to show 30 nodes so we can easily see what is aggregated.
     $edit = array('default_nodes_main' => 30);
     $this->drupalPost('admin/content/node-settings', $edit, 'Save configuration');
@@ -25,6 +28,8 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
 
   public function testBasic() {
     $this->createImporterConfiguration();
+    $this->drupalGet($this->base_url . '/list/syndication');
+    $this->assertText('There are no mappings defined for this importer.');
     $this->addMappings('syndication',
       array(
         array(
@@ -46,14 +51,14 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     );
 
     // Check that tamper operation exists on feeds page.
-    $this->drupalGet('admin/build/feeds/list');
+    $this->drupalGet($this->feeds_base . '/list');
     $this->assertText('Edit | Export | Clone | Delete | Tamper');
     // Check that configure link exists on mappings page.
-    $this->drupalGet('admin/build/feeds/edit/syndication/mapping');
-    $this->assertRaw('<a href="/admin/build/feeds/tamper/list/syndication">Configure Feeds Tamper</a>');
+    $this->drupalGet($this->feeds_base . '/edit/syndication/mapping');
+    $this->assertRaw('<a href="/' . $this->base_url . '/list/syndication">Configure Feeds Tamper</a>');
     // Check help text when there are no mappings.
-    $this->drupalGet('admin/build/feeds/tamper/list/syndication');
-    $this->assertRaw('Configure plugins to modify Feeds data before it gets saved. Each <a href="/admin/build/feeds/edit/syndication/mapping">mapping</a> can be manipulated individually.');
+    $this->drupalGet($this->base_url . '/list/syndication');
+    $this->assertRaw('Configure plugins to modify Feeds data before it gets saved. Each <a href="/' . $this->feeds_base . '/edit/syndication/mapping">mapping</a> can be manipulated individually.');
     // Test basic plugin adding.
     $settings = array(
       'settings[mode]' => 0,
@@ -66,6 +71,7 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     $this->assertUppercaseDevseedFeedContent();
     $this->toggleTamperPlugin('syndication', 'title', $id);
     $this->toggleTamperPlugin('syndication', 'title', $id, TRUE);
+    $this->setTamperPluginWeight('syndication', 'title', $id, 2);
     $this->deleteTamperPlugin($id);
   }
 
@@ -73,7 +79,7 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     $plugin = feeds_tamper_get_plugin($plugin_id);
     $default_description = !empty($plugin['default description']) ? $plugin['default description'] : $plugin['name'];
     $default_id = feeds_tamper_make_machine($default_description);
-    $url = 'admin/build/feeds/tamper/add/' . $importer_id . '/' . $source;
+    $url = $this->base_url . '/add/' . $importer_id . '/' . $source;
     $this->drupalPost($url, array('plugin_id' => $plugin_id), 'Choose');
 
     // Check that default values were added to form.
@@ -94,14 +100,22 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
   }
 
   function toggleTamperPlugin($importer_id, $source, $id, $enable = FALSE) {
-    $url = 'admin/build/feeds/tamper/list/' . $importer_id;
+    $url = $this->base_url . '/list/' . $importer_id;
     $name = $source . '[table][' . $id . '][enabled]';
     $this->drupalPost($url, array($name => $enable), 'Save changes');
     $this->assertFieldByName($name, $enable);
   }
 
+  function setTamperPluginWeight($importer_id, $source, $id, $weight) {
+    $url = $this->base_url . '/list/' . $importer_id;
+    $name = $source . '[table][' . $id . '][weight-' . $id . ']';
+    $this->drupalPost($url, array($name => $weight), 'Save changes');
+    $this->assertFieldByName($name, $weight);
+    $this->assertText('Your changes have been saved.');
+  }
+
   function deleteTamperPlugin($id) {
-    $url = 'admin/build/feeds/tamper/delete/' . $id;
+    $url = $this->base_url . '/delete/' . $id;
     $this->drupalGet($url);
     $instance = feeds_tamper_load_instance($id);
     $this->assertText('Would you really like to delete the plugin ' . $instance->description . '?');
