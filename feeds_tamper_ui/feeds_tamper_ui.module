@@ -7,7 +7,7 @@ function feeds_tamper_ui_help($path, $arg) {
   switch ($path) {
     case 'admin/build/feeds/tamper/list/%':
       $importer = feeds_importer($arg[5]);
-      return '<p>' . t('Configure plugins to modify Feeds data before it gets saved. Each !mapping can be manipualted individually.', array('!mapping' => l(t('mapping'), 'admin/build/feeds/edit/' . $importer->id . '/mapping'))) . '</p>';
+      return '<p>' . t('Configure plugins to modify Feeds data before it gets saved. Each !mapping can be manipulated individually.', array('!mapping' => l(t('mapping'), 'admin/build/feeds/edit/' . $importer->id . '/mapping'))) . '</p>';
   }
 }
 

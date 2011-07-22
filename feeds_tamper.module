@@ -153,7 +153,12 @@ function feeds_tamper_get_plugins() {
  */
 function feeds_tamper_get_plugin($id) {
   ctools_include('plugins');
-  return ctools_get_plugins('feeds_tamper', 'plugins', $id);
+  static $defaults;
+  if (empty($defaults)) {
+    $info = feeds_tamper_ctools_plugin_type();
+    $defaults = $info['plugins']['defaults'];
+  }
+  return ctools_get_plugins('feeds_tamper', 'plugins', $id) + $defaults;
 }
 
 /**
