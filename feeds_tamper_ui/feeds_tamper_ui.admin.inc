@@ -203,7 +203,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#submit' => array('feeds_tamper_ui_ajax_submit'),
     '#attributes' => array('class' => 'no-js'),
   );
-  $form['description'] = array(
+  $form['plugin']['description'] = array(
     '#title' => t('Description'),
     '#type' => 'textfield',
     '#default_value' => !empty($plugin['default description']) ? t($plugin['default description']) : t($plugin['name']),
@@ -211,10 +211,10 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#description' => t('A useful description of what this plugin is doing.'),
     '#attributes' => array('class' => 'feed-name'),
   );
-  $form['id'] = array(
+  $form['plugin']['id'] = array(
     '#title' => t('Machine name'),
     '#type' => 'textfield',
-    '#default_value' => feeds_tamper_make_machine($form['description']['#default_value']),
+    '#default_value' => feeds_tamper_make_machine($form['plugin']['description']['#default_value']),
     '#maxlength' => 32,
     '#attributes' => array('class' => 'feed-id'),
     '#required' => TRUE,
@@ -372,8 +372,6 @@ function feeds_tamper_ui_js() {
   $form['#programmed'] = $form['#redirect'] = FALSE;
   $form_state['submitted'] = TRUE;
   if (!isset($_POST['op'])) {
-    $form['plugin']['description']['#required'] = FALSE;
-    $form['plugin']['id']['#required'] = FALSE;
     $form['#validate'] = array();
     $form['#submit'] = array();
   }
