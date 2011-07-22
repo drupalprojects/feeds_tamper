@@ -356,6 +356,7 @@ function feeds_tamper_ui_delete_form_submit($form, &$form_state) {
   $instance = $form_state['storage']['instance'];
   feeds_tamper_delete_instance($instance);
   unset($form_state['storage']);
+  drupal_set_message(t('The plugin %plugin has been deleted from %source.', array('%plugin' => $instance->description, '%source' => $instance->source)));
   $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $instance->importer;
 }
 
