@@ -158,6 +158,8 @@ function theme_feeds_tamper_ui_list_form($form) {
 function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   // Workaround some bug unserializing $_SESSION stuff. Most likely related to
   // ajax.
+  // @todo
+  //  Fix this properly.
   if (get_class($importer) == '__PHP_Incomplete_Class') {
     foreach ($importer as $key => $value) {
       if ($key == 'id') {

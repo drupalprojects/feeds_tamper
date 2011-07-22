@@ -17,8 +17,8 @@ function feeds_tamper_rewrite_form($importer, $element_key, $settings) {
   foreach ($mappings as $mapping) {
     $replace[] = '[' . $mapping['source'] . ']';
   }
-  $form['title']['#markup'] = t('The availiable replacement patterns are:');
-  $form['help']['#markup'] = theme('item_list', array('items' => $replace));
+  $form['title']['#value'] = t('The availiable replacement patterns are:');
+  $form['help']['#value'] = theme('item_list', $replace);
 
   $form['text'] = array(
     '#type' => 'textarea',
