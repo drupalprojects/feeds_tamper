@@ -13,7 +13,7 @@ $plugin = array(
 
 function feeds_tamper_strip_tags_form($importer, $element_key, $settings) {
   $form = array();
-  $form['help']['#markup'] = t('Remove all HTML tags except:');
+  $form['help']['#value'] = t('Remove all HTML tags except:');
   $form['allowed_tags'] = array(
     '#type' => 'textfield',
     '#title' => t('Allowed tags'),
