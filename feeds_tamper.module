@@ -138,7 +138,16 @@ function _feeds_tamper_cmp($a, $b) {
  */
 function feeds_tamper_get_plugins() {
   ctools_include('plugins');
-  return ctools_get_plugins('feeds_tamper', 'plugins');
+  static $defaults;
+  if (empty($defaults)) {
+    $info = feeds_tamper_ctools_plugin_type();
+    $defaults = $info['plugins']['defaults'];
+  }
+  $plugins = ctools_get_plugins('feeds_tamper', 'plugins');
+  foreach ($plugins as &$plugin) {
+    $plugin += $defaults;
+  }
+  return $plugins;
 }
 
 /**

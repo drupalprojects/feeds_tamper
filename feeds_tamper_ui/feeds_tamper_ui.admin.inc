@@ -156,6 +156,16 @@ function theme_feeds_tamper_ui_list_form($form) {
 }
 
 function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
+  // Workaround some bug unserializing $_SESSION stuff. Most likely related to
+  // ajax.
+  if (get_class($importer) == '__PHP_Incomplete_Class') {
+    foreach ($importer as $key => $value) {
+      if ($key == 'id') {
+        $id = $value;
+      }
+    }
+    $importer = feeds_importer($id);
+  }
   // Set breadcrumb.
   $crumb = drupal_get_breadcrumb();
   $crumb[] = l(t('Tamper: @importer', array('@importer' => $importer->config['name'])), 'admin/build/feeds/tamper/list/' . $importer->id);
@@ -203,6 +213,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     '#value' => t('Choose'),
     '#submit' => array('feeds_tamper_ui_ajax_submit'),
     '#attributes' => array('class' => 'no-js'),
+    '#submit' => array('feeds_tamper_ui_ajax_submit'),
   );
   $form['plugin']['description'] = array(
     '#title' => t('Description'),
@@ -239,39 +250,43 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
 }
 
 function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
-  $plugin_id = $form_state['values']['plugin_id'];
-  $plugin = feeds_tamper_get_plugin($plugin_id);
-  if (!empty($plugin['validate']) && isset($form_state['values']['settings'])) {
-    $plugin['validate']($form_state['values']['settings']);
-  }
-  $form_state['values']['id'] =
-    $form_state['storage']['importer']->id .
-    '-' .
-    feeds_tamper_make_machine($form_state['storage']['source']) .
-    '-' .
-    $form_state['values']['id'];
-  if (feeds_tamper_load_instance($form_state['values']['id'])) {
-    form_set_error('id', t('Id is taken.'));
+  if ($_POST['op'] == 'Add') {
+    $plugin_id = $form_state['values']['plugin_id'];
+    $plugin = feeds_tamper_get_plugin($plugin_id);
+    if (!empty($plugin['validate']) && isset($form_state['values']['settings'])) {
+      $plugin['validate']($form_state['values']['settings']);
+    }
+    $form_state['values']['id'] =
+      $form_state['storage']['importer']->id .
+      '-' .
+      feeds_tamper_make_machine($form_state['storage']['source']) .
+      '-' .
+      $form_state['values']['id'];
+    if (feeds_tamper_load_instance($form_state['values']['id'])) {
+      form_set_error('id', t('Id is taken.'));
+    }
   }
 }
 
 function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
-  $obj = new stdClass();
-  $obj->plugin_id = $form_state['values']['plugin_id'];
-  if (isset($form_state['values']['settings'])) {
-    $obj->settings = $form_state['values']['settings'];
-  }
-  $obj->importer = $form_state['storage']['importer']->id;
-  $obj->source = $form_state['storage']['source'];
-  $obj->export_type = NULL;
-  $obj->description = $form_state['values']['description'];
-  $obj->id = $form_state['values']['id'];
-  // Allow redirects.
-  unset($form_state['storage']);
+  if ($_POST['op'] == 'Add') {
+    $obj = new stdClass();
+    $obj->plugin_id = $form_state['values']['plugin_id'];
+    if (isset($form_state['values']['settings'])) {
+      $obj->settings = $form_state['values']['settings'];
+    }
+    $obj->importer = $form_state['storage']['importer']->id;
+    $obj->source = $form_state['storage']['source'];
+    $obj->export_type = NULL;
+    $obj->description = $form_state['values']['description'];
+    $obj->id = $form_state['values']['id'];
+    // Allow redirects.
+    unset($form_state['storage']);
 
-  feeds_tamper_save_instance($obj);
-  $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $obj->importer;
-  drupal_set_message(t('Plugin %description was successfully added to %source.', array('%description' => $obj->description, '%source' => $obj->source)));
+    feeds_tamper_save_instance($obj);
+    $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $obj->importer;
+    drupal_set_message(t('Plugin %description was successfully added to %source.', array('%description' => $obj->description, '%source' => $obj->source)));
+  }
 }
 
 function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {
