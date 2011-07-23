@@ -21,32 +21,10 @@ function feeds_tamper_absolute_url_form($importer, $element_key, $settings) {
  *   Make this not suck.
  */
 function feeds_tamper_absolute_url_callback($source, $item_key, $element_key, &$field, $settings) {
-  static $b;
   static $dom;
 
-  if ($b === FALSE) {
-    return;
-  }
-
-  if (!isset($b)) {
-    // parse_url doesn't properly handle urls without a scheme.
-    $pos = strpos($source->batch->link, '://');
-    // This allows for ftp, ftps, http, https. Not sure if that's necessary but
-    // hey.
-    if ($pos !== 3 && $pos !== 4 && $pos !== 5) {
-      // Assume http if scheme isn't set.
-      $b = parse_url('http://' . $source->batch->link);
-    }
-    else {
-      $b = parse_url($source->batch->link);
-    }
-    // If the host isn't set for the base url then there's nothing we could do.
-    // We set $b to false so the next call will know it's pointless.
-    if ($b === FALSE || empty($b['host'])) {
-      $b = FALSE;
-      return;
-    }
-    // Save the DOMDocument for reuse between calls.
+  $b = parse_url($source->batch->link);
+  if (!isset($dom)) {
     $dom = new DOMDocument();
   }
 
@@ -104,12 +82,11 @@ function _feeds_tamper_absolute_url($r_url, &$urls, $b) {
   }
 
   // If relative URL path doesn't start with /, merge with base path
-  if ($r['path'][0] != '/') {
-    $base = mb_strrchr($b['path'], '/', TRUE, 'UTF-8');
-    if ($base === FALSE) {
-      $base = '';
+  if (strpos($r['path'], '/') !== 0) {
+    if (empty($b['path'])) {
+      $b['path'] = '';
     }
-    $r['path'] = $base . '/' . $r['path'];
+    $r['path'] = $b['path'] . '/' . $r['path'];
   }
   $urls[$r_url] = _feeds_tamper_join_url($r);
 }

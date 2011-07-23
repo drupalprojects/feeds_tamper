@@ -40,5 +40,13 @@ function feeds_tamper_explode_validate(&$settings) {
 }
 
 function feeds_tamper_explode_callback($source, $item_key, $element_key, &$field, $settings) {
-  $field = explode($settings['real_separator'], $field);
+  if (strpos($field, $settings['real_separator']) === FALSE) {
+    return;
+  }
+  elseif (empty($settings['limit'])) {
+    $field = explode($settings['real_separator'], $field);
+  }
+  else {
+    $field = explode($settings['real_separator'], $field, $settings['limit']);
+  }
 }
