@@ -77,10 +77,10 @@ function feeds_tamper_ui_list_form_submit($form, &$form_state) {
       foreach ($form_state['values'][$mapping]['table'] as $id => $value) {
         $instance = feeds_tamper_load_instance($id);
         $weight = (int) $value['weight-' . $id];
-        $disabled[$id] = !$value['enabled'];
+        $disabled[$id] = !(bool) $value['enabled'];
         if ($instance->weight != $weight) {
           $instance->weight = $weight;
-          ctools_export_crud_save('feeds_tamper', $instance);
+          feeds_tamper_save_instance($instance);
         }
       }
 

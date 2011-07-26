@@ -34,8 +34,8 @@ function feeds_tamper_explode_validate(&$settings) {
   if ($settings['limit'] === '0') {
     $settings['limit'] = 1;
   }
-  if (!is_numeric($settings['limit'])) {
-    form_set_error('explode][limit', t('Limit must be an integer.'));
+  if (!empty($settings['limit']) && !ctype_digit($settings['limit'])) {
+    form_set_error('explode][limit', t('Limit must be an integer or blank.'));
   }
 }
 
