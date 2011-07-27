@@ -203,7 +203,6 @@ function feeds_tamper_ctools_plugin_directory($module, $plugin) {
  */
 function feeds_tamper_ctools_plugin_plugins() {
   return array(
-    'cache' => FALSE,
     'use hooks' => FALSE,
     'defaults' => array(
       'validate' => FALSE,

@@ -71,6 +71,52 @@ class FeedsTamperAbsoluteURLTestCase extends FeedsTamperUnitTestCase {
 }
 
 /**
+ * Tests for convert_boolean.inc
+ */
+class FeedsTamperCovertBooleanTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'convert_boolean';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: Convert to boolean',
+      'description' => 'Unit tests for "Convert to boolean" plugin.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $settings = array(
+      'true_value' => 'A',
+      'false_value' => 'B',
+      'match_case' => FALSE,
+      'no_match' => 'false',
+    );
+    // Basic functionality.
+    $this->execute('A', TRUE, $settings);
+    $this->execute('B', FALSE, $settings);
+    // match_case = FALSE works.
+    $this->execute('a', TRUE, $settings);
+    $this->execute('b', FALSE, $settings);
+    // no_match = false
+    $this->execute('c', FALSE, $settings);
+    $settings['no_match'] = 'pass';
+    $this->execute('c', 'c', $settings);
+    // match_case = TRUE
+    $settings['match_case'] = TRUE;
+    $settings['no_match'] = 'false';
+    $this->execute('a', FALSE, $settings);
+    // no_match = NULL.
+    $settings['no_match'] = 'null';
+    $this->execute('a', NULL, $settings);
+    // other_text = 'other text'.
+    $settings['no_match'] = 'other';
+    $settings['other_text'] = 'other text';
+    $this->execute('a', 'other text', $settings);
+  }
+}
+
+/**
  * Tests for convert_case.inc
  */
 class FeedsTamperConvertCaseTestCase extends FeedsTamperUnitTestCase {
