@@ -180,6 +180,27 @@ class FeedsTamperCopyTestCase extends FeedsTamperUnitTestCase {
 }
 
 /**
+ * Tests for default_value.inc
+ */
+class FeedsTamperDefaultValueTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'default_value';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: Set default value',
+      'description' => 'Unit tests for "Set default value" plugin.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $this->execute('asdfasdf', 'HELLO', array('default_value' => 'HELLO'));
+    $this->execute(array('asdfasdf'), 'HELLO', array('default_value' => 'HELLO'));
+  }
+}
+
+/**
  * Tests for explode.inc
  */
 class FeedsTamperExplodeTestCase extends FeedsTamperUnitTestCase {
