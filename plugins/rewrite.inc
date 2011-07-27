@@ -12,18 +12,20 @@ function feeds_tamper_rewrite_form($importer, $element_key, $settings) {
   $form = array();
   $mappings = $importer->processor->config['mappings'];
   $replace = array();
-  $options = array();
 
   foreach ($mappings as $mapping) {
     $replace[] = '[' . $mapping['source'] . ']';
   }
-  $form['title']['#value'] = t('The availiable replacement patterns are:');
-  $form['help']['#value'] = theme('item_list', $replace);
 
   $form['text'] = array(
     '#type' => 'textarea',
     '#title' => t('Replacement pattern'),
     '#default_value' => isset($settings['text']) ? $settings['text'] : '',
+  );
+  $form['help'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Available Replacement Patterns'),
+    '#value' => theme('item_list', $replace),
   );
   return $form;
 }

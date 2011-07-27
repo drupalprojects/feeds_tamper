@@ -16,10 +16,12 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
   $form['#importer'] = $importer;
 
   foreach ($mappings as $mapping) {
-    $form['mappings'][$mapping['source']] = array(
-      '#title' => check_plain($mapping['source']) . ' -> ' . check_plain($mapping['target']),
-      '#tree' => TRUE,
-    );
+    $title = check_plain($mapping['source']) . ' -> ' . check_plain($mapping['target']);
+    if (!isset($form['mappings'][$mapping['source']]['#title'])) {
+      $form['mappings'][$mapping['source']]['#title'] = array();
+    }
+    $form['mappings'][$mapping['source']]['#title'][] = $title;
+    $form['mappings'][$mapping['source']]['#tree'] = TRUE;
     $form['mappings'][$mapping['source']]['table'] = array();
 
     if (!isset($instances[$mapping['source']])) {
@@ -77,10 +79,10 @@ function feeds_tamper_ui_list_form_submit($form, &$form_state) {
       foreach ($form_state['values'][$mapping]['table'] as $id => $value) {
         $instance = feeds_tamper_load_instance($id);
         $weight = (int) $value['weight-' . $id];
-        $disabled[$id] = !$value['enabled'];
+        $disabled[$id] = !(bool) $value['enabled'];
         if ($instance->weight != $weight) {
           $instance->weight = $weight;
-          ctools_export_crud_save('feeds_tamper', $instance);
+          feeds_tamper_save_instance($instance);
         }
       }
 
@@ -141,7 +143,8 @@ function theme_feeds_tamper_ui_list_form($form) {
     unset($form['mappings'][$source]['add_link']);
     $table_rows = array_merge($table_rows, $disabled_rows);
     $table_rows[] = array('data' => array(array('data' => $add, 'colspan' => 6)), 'class' => 'feeds-tamper-add');
-    $table = theme_table($header, $table_rows, array('id' => $table_id), $form['mappings'][$source]['#title']);
+    $caption = implode(', ', $form['mappings'][$source]['#title']);
+    $table = theme_table($header, $table_rows, array('id' => $table_id), $caption);
     //$disabled_table = theme_table(NULL, $disabled_rows, NULL, t('Disabled'));
     $form['mappings'][$source]['table']['#value'] = $table;
     //if (!empty($disabled_rows)) {
@@ -292,6 +295,10 @@ function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
 }
 
 function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {
+  if (!$instance) {
+    drupal_set_message(t('Invalid plugin id.'), 'error');
+    return;
+  }
   // Set breadcrumb.
   $importer = feeds_importer($instance->importer);
   $crumb = drupal_get_breadcrumb();
@@ -344,6 +351,10 @@ function feeds_tamper_ui_edit_plugin_form_submit($form, &$form_state) {
 }
 
 function feeds_tamper_ui_delete_form(&$form_state, $instance) {
+  if (!$instance) {
+    drupal_set_message(t('Invalid plugin id.'), 'error');
+    return;
+  }
   $form = array();
   // Set breadcrumb.
   $importer = feeds_importer($instance->importer);

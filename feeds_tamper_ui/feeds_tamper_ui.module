@@ -61,17 +61,21 @@ function feeds_tamper_plugin_instance_load($instance_id) {
 }
 
 function feeds_tamper_ui_edit_title($instance) {
-  if ($instance->export_type == EXPORT_IN_DATABASE) {
-    return t('Edit: @id', array('@id' => $instance->description));
+  if ($instance) {
+    if ($instance->export_type == EXPORT_IN_DATABASE) {
+      return t('Edit: @id', array('@id' => $instance->description));
+    }
+    return t('Override: @id', array('@id' => $instance->description));
   }
-  return t('Override: @id', array('@id' => $instance->description));
 }
 
 function feeds_tamper_ui_delete_title($instance) {
-  if ($instance->export_type == EXPORT_IN_DATABASE) {
-    return t('Delete plugin: @id', array('@id', $instance->id));
+  if ($instance) {
+    if ($instance->export_type == EXPORT_IN_DATABASE) {
+      return t('Delete plugin: @id', array('@id', $instance->id));
+    }
+    return t('Revert plugin: @id', array('@id', $instance->id));
   }
-  return t('Revert plugin: @id', array('@id', $instance->id));
 }
 
 function feeds_tamper_ui_main_title($importer) {

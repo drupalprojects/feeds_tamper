@@ -63,13 +63,11 @@ function feeds_tamper_temp() {
  */
 function feeds_tamper_load_all_instances($load_disabled = FALSE) {
   $instances = array();
-  if (function_exists('ctools_include')) {
-    ctools_include('export');
-    $configs = ctools_export_crud_load_all('feeds_tamper');
-    foreach ($configs as $instance_id => $config) {
-      if (!empty($config->id) && ($load_disabled || empty($config->disabled))) {
-        $instances[$instance_id] = $config;
-      }
+  ctools_include('export');
+  $configs = ctools_export_crud_load_all('feeds_tamper');
+  foreach ($configs as $instance_id => $config) {
+    if (!empty($config->id) && ($load_disabled || empty($config->disabled))) {
+      $instances[$instance_id] = $config;
     }
   }
   return $instances;
@@ -87,6 +85,18 @@ function feeds_tamper_load_instance($id) {
  * Save plugin instance.
  */
 function feeds_tamper_save_instance($instance) {
+  // It's a new instance, give it the heaviest weight.
+  if (empty($instance->weight)) {
+    $all = feeds_tamper_load_by_importer($instance->importer, TRUE);
+    $all = !empty($all[$instance->source]) ? $all[$instance->source] : array();
+    $weight = 0;
+    foreach ($all as $i) {
+      if ($i->weight >= $weight) {
+        $weight = $i->weight + 1;
+      }
+    }
+    $instance->weight = $weight;
+  }
   ctools_include('export');
   return ctools_export_crud_save('feeds_tamper', $instance);
 }
@@ -95,6 +105,7 @@ function feeds_tamper_save_instance($instance) {
  * Delete plugin instance.
  */
 function feeds_tamper_delete_instance($instance) {
+  ctools_include('export');
   ctools_export_crud_delete('feeds_tamper', $instance);
 }
 
@@ -124,8 +135,14 @@ function feeds_tamper_load_by_importer($importer_id, $disabled = FALSE, $lower =
 }
 
 function _feeds_tamper_cmp($a, $b) {
+  // If weights are equal compare id's.
   if ($a->weight == $b->weight) {
-    return 0;
+    $tmp = array($a->id, $b->id);
+    sort($tmp);
+    if ($tmp[0] == $a->id) {
+      return 1;
+    }
+    return -1;
   }
   return ($a->weight < $b->weight) ? -1 : 1;
 }
@@ -139,16 +156,7 @@ function _feeds_tamper_cmp($a, $b) {
  */
 function feeds_tamper_get_plugins() {
   ctools_include('plugins');
-  static $defaults;
-  if (empty($defaults)) {
-    $info = feeds_tamper_ctools_plugin_type();
-    $defaults = $info['plugins']['defaults'];
-  }
-  $plugins = ctools_get_plugins('feeds_tamper', 'plugins');
-  foreach ($plugins as &$plugin) {
-    $plugin += $defaults;
-  }
-  return $plugins;
+  return ctools_get_plugins('feeds_tamper', 'plugins');
 }
 
 /**
@@ -163,12 +171,8 @@ function feeds_tamper_get_plugins() {
  */
 function feeds_tamper_get_plugin($id) {
   ctools_include('plugins');
-  static $defaults;
-  if (empty($defaults)) {
-    $info = feeds_tamper_ctools_plugin_type();
-    $defaults = $info['plugins']['defaults'];
-  }
-  return ctools_get_plugins('feeds_tamper', 'plugins', $id) + $defaults;
+  return ctools_get_plugins('feeds_tamper', 'plugins', $id);
+
 }
 
 /**
@@ -189,30 +193,24 @@ function feeds_tamper_ctools_plugin_api($owner, $api) {
 */
 function feeds_tamper_ctools_plugin_directory($module, $plugin) {
   if ($module == 'feeds_tamper') {
-    return 'plugins/';
+    return 'plugins';
   }
 }
 
 /**
- * Implementation of hook_ctools_plugin_plugins().
+ * Implementation of hook_ctools_plugin_TYPE().
  *
  * Psuedo hook defintion plugin system options and defaults.
- *
- * @todo
- *   Enable caching once things are stable.
  */
-function feeds_tamper_ctools_plugin_type() {
+function feeds_tamper_ctools_plugin_plugins() {
   return array(
-    'plugins' => array(
-      'cache' => FALSE,
-      'use hook' => FALSE,
-      'defaults' => array(
-        'validate' => FALSE,
-        'multi' => FALSE,
-        'category' => 'Other',
-        'single' => FALSE,
-        'default description' => '',
-      ),
+    'use hooks' => FALSE,
+    'defaults' => array(
+      'validate' => FALSE,
+      'multi' => FALSE,
+      'category' => 'Other',
+      'single' => FALSE,
+      'default description' => '',
     ),
   );
 }
