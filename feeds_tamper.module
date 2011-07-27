@@ -41,19 +41,60 @@ function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $so
 }
 
 /**
+ * Implementation hook_feeds_parser_sources_alter().
+ */
+function feeds_tamper_feeds_parser_sources_alter(&$sources, $content_type) {
+  $sources['feeds_tamper_blank'] = array(
+    'name' => t('Blank source'),
+    'description' => t("A source provided by Feeds Tamper with no value of it's own."),
+    'callback' => '_feeds_tamper_set_empty',
+  );
+}
+
+/**
  * Implementation of hook_feeds_node_processor_targets_alter().
  */
 function feeds_tamper_feeds_node_processor_targets_alter(&$targets, $content_type) {
+  _feeds_tamper_targets_alter($targets);
+}
+
+/**
+ * Implementation of hook_feeds_user_processor_targets_alter().
+ */
+function feeds_tamper_feeds_user_processor_targets_alter(&$targets) {
+  _feeds_tamper_targets_alter($targets);
+}
+
+/**
+ * Implementation of hook_feeds_term_processor_targets_alter().
+ */
+function feeds_tamper_feeds_term_processor_targets_alter(&$targets, $vid) {
+  _feeds_tamper_targets_alter($targets);
+}
+
+/**
+ * Implementation of hook_feeds_data_processor_targets_alter().
+ */
+function feeds_tamper_feeds_user_processor_targets_alter(&$fields, $data_table) {
+  _feeds_tamper_targets_alter($fields);
+}
+
+/**
+ * Helper function for hook_feeds_TYPE_processor_target_alter().
+ */
+function _feeds_tamper_targets_alter(&$targets) {
   $targets['feeds_tamper_store'] = array(
     'name' => 'Temporary store',
     'description' => t('A field that stores the source data temporarily so that it can be used with the Feeds Tamper rewrite plugin.'),
+    'callback' => '_feeds_tamper_set_empty',
   );
 }
 
 /**
  * Do nothing callback.
  */
-function feeds_tamper_temp() {
+function _feeds_tamper_set_empty() {
+  return '';
 }
 
 /**
