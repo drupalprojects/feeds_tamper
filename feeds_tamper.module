@@ -18,20 +18,22 @@ function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $so
   $plugins = feeds_tamper_get_plugins();
   foreach ($source->batch->items as $item_key => &$item) {
     foreach ($importer_instances as $element_key => $instances) {
-      foreach ($instances as $instance) {
-        $plugin = $plugins[$instance->plugin_id];
-        $is_array = is_array($item[$element_key]);
+      if (isset($item[$element_key])) {
+        foreach ($instances as $instance) {
+          $plugin = $plugins[$instance->plugin_id];
+          $is_array = is_array($item[$element_key]);
 
-        if ($is_array && $plugin['multi'] == 'loop') {
-          foreach ($item[$element_key] as &$i) {
-            $plugin['callback']($source, $item_key, $element_key, $i, $instance->settings);
+          if ($is_array && $plugin['multi'] == 'loop') {
+            foreach ($item[$element_key] as &$i) {
+              $plugin['callback']($source, $item_key, $element_key, $i, $instance->settings);
+            }
           }
-        }
-        elseif ($is_array && $plugin['multi'] == 'direct') {
-          $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
-        }
-        elseif (!$is_array && $plugin['single'] != 'skip') {
-          $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
+          elseif ($is_array && $plugin['multi'] == 'direct') {
+            $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
+          }
+          elseif (!$is_array && $plugin['single'] != 'skip') {
+            $plugin['callback']($source, $item_key, $element_key, $item[$element_key], $instance->settings);
+          }
         }
       }
     }
