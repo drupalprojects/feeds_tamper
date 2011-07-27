@@ -15,10 +15,11 @@ function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $so
   if (empty($importer_instances)) {
     return;
   }
+  $plugins = feeds_tamper_get_plugins();
   foreach ($source->batch->items as $item_key => &$item) {
     foreach ($importer_instances as $element_key => $instances) {
       foreach ($instances as $instance) {
-        $plugin = feeds_tamper_get_plugin($instance->plugin_id);
+        $plugin = $plugins[$instance->plugin_id];
         $is_array = is_array($item[$element_key]);
 
         if ($is_array && $plugin['multi'] == 'loop') {

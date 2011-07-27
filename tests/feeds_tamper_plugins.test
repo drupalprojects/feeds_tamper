@@ -522,6 +522,28 @@ class FeedsTamperStripTagsTestCase extends FeedsTamperUnitTestCase {
 }
 
 /**
+ * Tests for strtotime.inc
+ */
+class FeedsTamperStrToTimeTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'strtotime';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: String to Unix Timestamp',
+      'description' => 'Unit tests for the "String to Unix Timestamp" plugin.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $this->execute('1986-05-09', 515995200);
+    $this->execute('May 9, 1986', 515995200);
+    $this->execute('Fri, 09 May 1986 04:00:00 GMT', 515995200);
+  }
+}
+
+/**
  * Tests for trim.inc
  */
 class FeedsTamperTrimTestCase extends FeedsTamperUnitTestCase {
