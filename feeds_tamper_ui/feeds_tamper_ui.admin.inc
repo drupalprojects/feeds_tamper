@@ -16,18 +16,16 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
   $form['#importer'] = $importer;
 
   foreach ($mappings as $mapping) {
-    $title = check_plain($mapping['source']) . ' -> ' . check_plain($mapping['target']);
-    if (!isset($form['mappings'][$mapping['source']]['#title'])) {
-      $form['mappings'][$mapping['source']]['#title'] = array();
-    }
-    $form['mappings'][$mapping['source']]['#title'][] = $title;
-    $form['mappings'][$mapping['source']]['#tree'] = TRUE;
-    $form['mappings'][$mapping['source']]['table'] = array();
+    $source = $mapping['source'];
+    $form['mappings'][$source]['#title']['source'] = check_plain($source);
+    $form['mappings'][$source]['#title']['targets'][] = check_plain($mapping['target']);
+    $form['mappings'][$source]['#tree'] = TRUE;
+    $form['mappings'][$source]['table'] = array();
 
-    if (!isset($instances[$mapping['source']])) {
-      $instances[$mapping['source']] = array();
+    if (!isset($instances[$source])) {
+      $instances[$source] = array();
     }
-    foreach ($instances[$mapping['source']] as $instance) {
+    foreach ($instances[$source] as $instance) {
       $plugin = feeds_tamper_get_plugin($instance->plugin_id);
       if ($instance->export_type == EXPORT_IN_CODE) {
         $status = t('Default');
@@ -46,23 +44,23 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
       }
       $instance->disabled = !isset($instance->disabled) ? FALSE : $instance->disabled;
       $checkbox = array('#type' => 'checkbox', '#default_value' => !$instance->disabled);
-      $form['mappings'][$mapping['source']]['table'][$instance->id]['enabled'] = $checkbox;
-      $form['mappings'][$mapping['source']]['table'][$instance->id]['description']['#value'] = !empty($instance->description) ? check_plain($instance->description) : $instance->id;
-      $form['mappings'][$mapping['source']]['table'][$instance->id]['name']['#value'] = $plugin['name'];
-      $form['mappings'][$mapping['source']]['table'][$instance->id]['status']['#value'] = $status;
-      $form['mappings'][$mapping['source']]['table'][$instance->id]['edit']['#value'] =
+      $form['mappings'][$source]['table'][$instance->id]['enabled'] = $checkbox;
+      $form['mappings'][$source]['table'][$instance->id]['description']['#value'] = !empty($instance->description) ? check_plain($instance->description) : $instance->id;
+      $form['mappings'][$source]['table'][$instance->id]['name']['#value'] = $plugin['name'];
+      $form['mappings'][$source]['table'][$instance->id]['status']['#value'] = $status;
+      $form['mappings'][$source]['table'][$instance->id]['edit']['#value'] =
         l(t($edit), 'admin/build/feeds/tamper/edit/' . $instance->id) . (empty($delete) ? '' :  ' | ' .
         l(t($delete), 'admin/build/feeds/tamper/delete/' . $instance->id));
-      $form['mappings'][$mapping['source']]['table'][$instance->id]['weight-' . $instance->id] = array(
+      $form['mappings'][$source]['table'][$instance->id]['weight-' . $instance->id] = array(
         '#type' => 'textfield',
         '#size' => 5,
         '#default_value' => $instance->weight,
         '#attributes' => array('class' => 'weight'),
       );
     }
-    $l = 'admin/build/feeds/tamper/add/' . $importer->id . '/' . $mapping['source'];
+    $l = 'admin/build/feeds/tamper/add/' . $importer->id . '/' . $source;
     $add = l(t('Add plugin'), $l, array('attributes' => array('class' => 'feeds-tamper-add')));
-    $form['mappings'][$mapping['source']]['add_link']['#value'] = $add;
+    $form['mappings'][$source]['add_link']['#value'] = $add;
   }
   $form['submit'] = array(
     '#type' => 'submit',
@@ -143,7 +141,7 @@ function theme_feeds_tamper_ui_list_form($form) {
     unset($form['mappings'][$source]['add_link']);
     $table_rows = array_merge($table_rows, $disabled_rows);
     $table_rows[] = array('data' => array(array('data' => $add, 'colspan' => 6)), 'class' => 'feeds-tamper-add');
-    $caption = implode(', ', $form['mappings'][$source]['#title']);
+    $caption = $form['mappings'][$source]['#title']['source'] . ' -> ' . implode(', ', $form['mappings'][$source]['#title']['targets']);
     $table = theme_table($header, $table_rows, array('id' => $table_id), $caption);
     //$disabled_table = theme_table(NULL, $disabled_rows, NULL, t('Disabled'));
     $form['mappings'][$source]['table']['#value'] = $table;
