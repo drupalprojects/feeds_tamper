@@ -543,6 +543,38 @@ class FeedsTamperStripTagsTestCase extends FeedsTamperUnitTestCase {
 }
 
 /**
+ * Tests for str_pad.inc
+ */
+class FeedsTamperStrPadTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'str_pad';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: Pad a string',
+      'description' => 'Unit tests for "Pad a string" plugin.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $settings = array(
+      'pad_length' => '10',
+      'pad_string' => '',
+      'pad_type' => STR_PAD_RIGHT,
+    );
+    $this->execute('hi', 'hi        ', $settings);
+    $settings['pad_type'] = STR_PAD_LEFT;
+    $this->execute('hi', '        hi', $settings);
+    $settings['pad_type'] = STR_PAD_RIGHT;
+    $settings['pad_string'] = '0';
+    $settings['pad_length'] = '5';
+    // Can't use 1.0 since 1.0 == 1.000
+    $this->execute('A.0', 'A.000', $settings);
+  }
+}
+
+/**
  * Tests for strtotime.inc
  */
 class FeedsTamperStrToTimeTestCase extends FeedsTamperUnitTestCase {

@@ -75,7 +75,7 @@ function feeds_tamper_feeds_term_processor_targets_alter(&$targets, $vid) {
 /**
  * Implementation of hook_feeds_data_processor_targets_alter().
  */
-function feeds_tamper_feeds_user_processor_targets_alter(&$fields, $data_table) {
+function feeds_tamper_feeds_data_processor_targets_alter(&$fields, $data_table) {
   _feeds_tamper_targets_alter($fields);
 }
 

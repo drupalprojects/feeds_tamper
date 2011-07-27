@@ -75,7 +75,7 @@ function feeds_tamper_convert_boolean_validate(&$settings) {
   }
 }
 
-function feeds_tamper_convert_boolean_callback($result, $item_key, $element_key, &$field, $settings) {
+function feeds_tamper_convert_boolean_callback($source, $item_key, $element_key, &$field, $settings) {
   // Copy field value in case 'pass' is set.
   $match_field = $field;
   if (!$settings['match_case']) {
