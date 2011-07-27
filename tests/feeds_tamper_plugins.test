@@ -449,6 +449,41 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
 }
 
 /**
+ * Tests for number_format.inc
+ */
+class FeedsTamperNumberFormatTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'number_format';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: Format a number',
+      'description' => 'Unit tests for "Format a number" plugin.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $settings = array(
+      'decimals' => '0',
+      'dec_point' => '.',
+      'thousands_sep' => ',',
+    );
+    $num = '1234.56';
+    $this->execute($num, '1,235', $settings);
+    // French notation.
+    $settings['decimals'] = '2';
+    $settings['thousands_sep'] = ' ';
+    $settings['dec_point'] = ',';
+    $this->execute($num, '1 234,56', $settings);
+    $num = 1234.5678;
+    $settings['thousands_sep'] = '';
+    $settings['dec_point'] = '.';
+    $this->execute($num, '1234.57', $settings);
+  }
+}
+
+/**
  * Tests for required.inc
  */
 class FeedsTamperRequiredTestCase extends FeedsTamperUnitTestCase {
