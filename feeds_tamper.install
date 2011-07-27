@@ -138,3 +138,21 @@ function feeds_tamper_update_6003(&$sandbox) {
   db_add_index($ret, 'feeds_tamper', 'importer', array('importer'));
   return $ret;
 }
+
+/**
+ * Verify that description length is 255.
+ *
+ * See #1182204.
+ */
+function feeds_tamper_update_6004(&$sandbox) {
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => 'Description of this plugin.',
+  );
+  $ret = array();
+  db_change_field($ret, 'feeds_tamper', 'description', 'description', $spec);
+  return $ret;
+}
