@@ -9,6 +9,8 @@
 function feeds_tamper_ui_list_form(&$form_state, $importer) {
   drupal_add_css(drupal_get_path('module', 'feeds_tamper_ui') . '/feeds_tamper_ui.css');
   $mappings = $importer->processor->config['mappings'];
+  $sources = $importer->parser->getMappingSources();
+  $targets = $importer->processor->getMappingTargets();
   $instances = feeds_tamper_load_by_importer($importer->id, TRUE);
 
   $form = array();
@@ -17,8 +19,8 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
 
   foreach ($mappings as $mapping) {
     $source = $mapping['source'];
-    $form['mappings'][$source]['#title']['source'] = check_plain($source);
-    $form['mappings'][$source]['#title']['targets'][] = check_plain($mapping['target']);
+    $form['mappings'][$source]['#title']['source'] = !empty($sources[$source]['name']) ? check_plain($sources[$source]['name']) : check_plain($source);
+    $form['mappings'][$source]['#title']['targets'][] = !empty($targets[$mapping['target']]['name']) ? check_plain($targets[$mapping['target']]['name']) : check_plain($mapping['target']);
     $form['mappings'][$source]['#tree'] = TRUE;
     $form['mappings'][$source]['table'] = array();
 
@@ -79,6 +81,10 @@ function feeds_tamper_ui_list_form_submit($form, &$form_state) {
         $weight = (int) $value['weight-' . $id];
         $disabled[$id] = !(bool) $value['enabled'];
         if ($instance->weight != $weight) {
+          if ($weight < 0) {
+            drupal_set_message(t('Weight must be greater than or equal to zero.'), 'error');
+            return;
+          }
           $instance->weight = $weight;
           feeds_tamper_save_instance($instance);
         }
@@ -383,7 +389,13 @@ function feeds_tamper_ui_delete_form_submit($form, &$form_state) {
   $instance = $form_state['storage']['instance'];
   feeds_tamper_delete_instance($instance);
   unset($form_state['storage']);
-  drupal_set_message(t('The plugin %plugin has been deleted from %source.', array('%plugin' => $instance->description, '%source' => $instance->source)));
+  switch ($instance->export_type) {
+    case EXPORT_IN_DATABASE:
+      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array('%plugin' => $instance->description, '%source' => $instance->source)));
+      break;
+    case EXPORT_IN_CODE | EXPORT_IN_DATABASE:
+      drupal_set_message(t('The plugin %plugin has been reverted.', array('%plugin' => $instance->description)));
+      break;
   $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $instance->importer;
 }
 
