@@ -223,7 +223,11 @@ class FeedsTamperExplodeTestCase extends FeedsTamperUnitTestCase {
     $this->execute('a,b,c,d', array('a', 'b', 'c', 'd'), $settings);
     $settings['limit'] = 2;
     $this->execute('a,b,c,d', array('a', 'b,c,d'), $settings);
-    $this->execute('a.b.c.d', 'a.b.c.d', $settings);
+    $this->execute('a.b.c.d', array('a.b.c.d'), $settings);
+    // Test multiple value handling.
+    $settings['limit'] = NULL;
+    $this->execute(array('a,b,c,d', 'e,f,g,h'), array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'), $settings);
+    $this->execute(array('abcd', 'e,f,g,h'), array('abcd', 'e', 'f', 'g', 'h'), $settings);
   }
 }
 

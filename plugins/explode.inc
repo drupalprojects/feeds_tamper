@@ -5,7 +5,7 @@ $plugin = array(
   'callback' => 'feeds_tamper_explode_callback',
   'validate' => 'feeds_tamper_explode_validate',
   'name' => 'Explode',
-  'multi' => 'skip',
+  'multi' => 'direct',
   'category' => 'List',
 );
 
@@ -40,13 +40,20 @@ function feeds_tamper_explode_validate(&$settings) {
 }
 
 function feeds_tamper_explode_callback($source, $item_key, $element_key, &$field, $settings) {
-  if (strpos($field, $settings['real_separator']) === FALSE) {
-    return;
+  $out = array();
+  if (!is_array($field)) {
+    $field = array($field);
   }
-  elseif (empty($settings['limit'])) {
-    $field = explode($settings['real_separator'], $field);
+  foreach ($field as $f) {
+    if (strpos($f, $settings['real_separator']) === FALSE) {
+      $out[] = $f;
+    }
+    elseif (empty($settings['limit'])) {
+      $out = array_merge($out, explode($settings['real_separator'], $f));
+    }
+    else {
+      $out = array_merge($out, explode($settings['real_separator'], $f, $settings['limit']));
+    }
   }
-  else {
-    $field = explode($settings['real_separator'], $field, $settings['limit']);
-  }
+  $field = $out;
 }
