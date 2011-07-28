@@ -414,16 +414,18 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
       'words' => 'booya',
       'word_boundaries' => FALSE,
       'case_sensitive' => FALSE,
+      'invert' => FALSE,
     );
-    $this->execute($item, array(), 'title', $settings);
+    $this->executeKey($item, array(), 'title', $settings);
     $settings = array(
       'words' => 'this',
       'word_boundaries' => FALSE,
       'case_sensitive' => FALSE,
+      'invert' => FALSE,
     );
-    $this->execute($item, array($item), 'title', $settings);
+    $this->executeKey($item, array($item), 'title', $settings);
     $settings['case_sensitive'] = TRUE;
-    $this->execute($item, array(), 'title', $settings);
+    $this->executeKey($item, array(), 'title', $settings);
     $item = array(
       'title' => 'This is atitle',
       'body' => 'hello body',
@@ -432,13 +434,48 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
       'words' => 'title',
       'word_boundaries' => FALSE,
       'case_sensitive' => FALSE,
+      'invert' => FALSE,
     );
-    $this->execute($item, array($item), 'title', $settings);
+    $this->executeKey($item, array($item), 'title', $settings);
     $settings['word_boundaries'] = TRUE;
-    $this->execute($item, array(), 'title', $settings);
+    $this->executeKey($item, array(), 'title', $settings);
+    // invert = TRUE.
+    $item = array(
+      'title' => 'This is a title',
+      'body' => 'hello body',
+    );
+    $settings = array(
+      'words' => 'booya',
+      'word_boundaries' => FALSE,
+      'case_sensitive' => FALSE,
+      'invert' => TRUE,
+    );
+    $this->executeKey($item, array($item), 'title', $settings);
+    $settings = array(
+      'words' => 'this',
+      'word_boundaries' => FALSE,
+      'case_sensitive' => FALSE,
+      'invert' => TRUE,
+    );
+    $this->executeKey($item, array(), 'title', $settings);
+    $settings['case_sensitive'] = TRUE;
+    $this->executeKey($item, array($item), 'title', $settings);
+    $item = array(
+      'title' => 'This is atitle',
+      'body' => 'hello body',
+    );
+    $settings = array(
+      'words' => 'title',
+      'word_boundaries' => FALSE,
+      'case_sensitive' => FALSE,
+      'invert' => TRUE,
+    );
+    $this->executeKey($item, array(), 'title', $settings);
+    $settings['word_boundaries'] = TRUE;
+    $this->executeKey($item, array($item), 'title', $settings);
   }
 
-  function execute($item, $output, $element_key, $settings) {
+  function executeKey($item, $output, $element_key, $settings) {
     $source = new stdClass();
     $source->batch->items = array();
     $source->batch->items[] = $item;

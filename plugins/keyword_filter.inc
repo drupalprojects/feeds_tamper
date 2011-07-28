@@ -29,6 +29,12 @@ function feeds_tamper_keyword_filter_form($importer, $element_key, $settings) {
     '#default_value' => isset($settings['case_sensitive']) ? $settings['case_sensitive'] : FALSE,
     '#description' => t('If checked, then "book" will match "book" but not "Book" or "BOOK".')
   );
+  $form['invert'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Invert filter'),
+    '#default_value' => isset($settings['invert']) ? $settings['invert'] : FALSE,
+    '#description' => t('Inverting the filter will %remove items with the specified text.', array('%remove' => 'remove')),
+  );
   return $form;
 }
 
@@ -67,6 +73,10 @@ function feeds_tamper_keyword_filter_callback($source, $item_key, $element_key, 
   if ($settings['regex']) {
     foreach ($settings['word_list'] as $word) {
       if (preg_match($word, $field) > 0) {
+        if (!$settings['invert']) {
+          return;
+        }
+        unset($source->batch->items[$item_key]);
         return;
       }
     }
@@ -74,9 +84,15 @@ function feeds_tamper_keyword_filter_callback($source, $item_key, $element_key, 
   else {
     foreach ($settings['word_list'] as $word) {
       if ($settings['func']($field, $word) !== FALSE) {
+        if (!$settings['invert']) {
+          return;
+        }
+        unset($source->batch->items[$item_key]);
         return;
       }
     }
   }
-  unset($source->batch->items[$item_key]);
+  if (!$settings['invert']) {
+    unset($source->batch->items[$item_key]);
+  }
 }
