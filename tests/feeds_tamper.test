@@ -95,8 +95,12 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     }
     $this->drupalPost(NULL, $edit + $settings, 'Add');
     $description = !empty($description) ? $description : $default_description;
-    $this->assertText('Plugin ' . $description . ' was successfully added to ' . $source . '.');
-    return $importer_id . '-' . feeds_tamper_make_machine($source) . '-' . (!empty($id) ? $id : $default_id);
+    $id = !empty($id) ? $id : $default_id;
+    $id = $importer_id . '-' . feeds_tamper_make_machine($source) . '-' . $id;
+    $instance = feeds_tamper_load_instance($id);
+    $source_name = feeds_tamper_ui_source_name($instance);
+    $this->assertText('Plugin ' . $description . ' was successfully added to ' . $source_name . '.');
+    return $id;
   }
 
   function toggleTamperPlugin($importer_id, $source, $id, $enable = FALSE) {
@@ -104,6 +108,7 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     $name = $source . '[table][' . $id . '][enabled]';
     $this->drupalPost($url, array($name => $enable), 'Save changes');
     $this->assertFieldByName($name, $enable);
+    $this->assertText('Your changes have been saved.');
   }
 
   function setTamperPluginWeight($importer_id, $source, $id, $weight) {
@@ -121,7 +126,8 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     $this->assertText('Would you really like to delete the plugin ' . $instance->description . '?');
     $this->assertText('This action cannot be undone.');
     $this->drupalPost(NULL, array(), 'Delete');
-    $this->assertText('The plugin ' . $instance->description . ' has been deleted from ' . $instance->source . '.');
+    $source_name = feeds_tamper_ui_source_name($instance);
+    $this->assertText('The plugin ' . $instance->description . ' has been deleted from ' . $source_name . '.');
   }
 
   function assertUppercaseDevseedFeedContent() {

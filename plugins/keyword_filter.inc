@@ -20,7 +20,7 @@ function feeds_tamper_keyword_filter_form($importer, $element_key, $settings) {
   $form['word_boundaries'] = array(
     '#type' => 'checkbox',
     '#title' => t('Respect word boundaries'),
-    '#default_value' => isset($settings['word_boundaries']) ? $settings['word_boundaries'] : TRUE,
+    '#default_value' => isset($settings['word_boundaries']) ? $settings['word_boundaries'] : FALSE,
     '#description' => t('If checked, then "book" will match "book" but not "bookcase".'),
   );
   $form['case_sensitive'] = array(

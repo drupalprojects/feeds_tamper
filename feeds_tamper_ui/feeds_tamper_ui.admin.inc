@@ -21,6 +21,10 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
     $source = $mapping['source'];
     $form['mappings'][$source]['#title']['source'] = !empty($sources[$source]['name']) ? check_plain($sources[$source]['name']) : check_plain($source);
     $form['mappings'][$source]['#title']['targets'][] = !empty($targets[$mapping['target']]['name']) ? check_plain($targets[$mapping['target']]['name']) : check_plain($mapping['target']);
+    // We don't need to build the table again for this source.
+    if (isset($form['mappings'][$source]['table'])) {
+      continue;
+    }
     $form['mappings'][$source]['#tree'] = TRUE;
     $form['mappings'][$source]['table'] = array();
 
@@ -171,6 +175,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
     foreach ($importer as $key => $value) {
       if ($key == 'id') {
         $id = $value;
+        break;
       }
     }
     $importer = feeds_importer($id);
@@ -294,7 +299,8 @@ function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
 
     feeds_tamper_save_instance($obj);
     $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $obj->importer;
-    drupal_set_message(t('Plugin %description was successfully added to %source.', array('%description' => $obj->description, '%source' => $obj->source)));
+    $source_name = feeds_tamper_ui_source_name($obj);
+    drupal_set_message(t('Plugin %description was successfully added to %source.', array('%description' => $obj->description, '%source' => $source_name)));
   }
 }
 
@@ -351,6 +357,7 @@ function feeds_tamper_ui_edit_plugin_form_submit($form, &$form_state) {
 
   feeds_tamper_save_instance($instance);
   unset($form_state['storage']);
+  drupal_set_message(t('The plugin %plugin has been updated.', array('%plugin' => $instance->description)));
   $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $instance->importer;
 }
 
@@ -389,13 +396,15 @@ function feeds_tamper_ui_delete_form_submit($form, &$form_state) {
   $instance = $form_state['storage']['instance'];
   feeds_tamper_delete_instance($instance);
   unset($form_state['storage']);
+  $source_name = feeds_tamper_ui_source_name($instance);
   switch ($instance->export_type) {
     case EXPORT_IN_DATABASE:
-      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array('%plugin' => $instance->description, '%source' => $instance->source)));
+      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array('%plugin' => $instance->description, '%source' => $source_name)));
       break;
     case EXPORT_IN_CODE | EXPORT_IN_DATABASE:
       drupal_set_message(t('The plugin %plugin has been reverted.', array('%plugin' => $instance->description)));
       break;
+  }
   $form_state['redirect'] = 'admin/build/feeds/tamper/list/' . $instance->importer;
 }
 
