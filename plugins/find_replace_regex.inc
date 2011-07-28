@@ -36,7 +36,7 @@ function feeds_tamper_find_replace_regex_validate(&$settings) {
   // test the regex
   $test = @preg_replace($settings['find'], '', 'asdfsadf');
   if ($test === NULL) {
-    return form_set_error('find_replace_regex][find', 'Invalid regular expression.');
+    form_set_error('settings][find', 'Invalid regular expression.');
   }
   $settings['limit'] = trim($settings['limit']);
   if (empty($settings['limit'])) {
@@ -46,7 +46,7 @@ function feeds_tamper_find_replace_regex_validate(&$settings) {
     $settings['real_limit'] = $settings['limit'];
   }
   if (!is_numeric($settings['real_limit'])) {
-    form_set_error('find_replace_regex][limit', 'Limit must be an integer.');
+    form_set_error('settings][limit', 'Limit must be an integer.');
   }
 }
 

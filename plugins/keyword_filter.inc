@@ -33,23 +33,30 @@ function feeds_tamper_keyword_filter_form($importer, $element_key, $settings) {
 }
 
 function feeds_tamper_keyword_filter_validate(&$settings) {
+  global $multibyte;
+  $is_multibyte = ($multibyte == UNICODE_MULTIBYTE) ? TRUE : FALSE;
   $settings['words'] = str_replace("\r", '', $settings['words']);
   $settings['word_list'] = explode("\n", $settings['words']);
   $settings['word_list'] = array_map('trim', $settings['word_list']);
   $settings['regex'] = FALSE;
 
   if (!$settings['word_boundaries'] && $settings['case_sensitive']) {
-    $settings['func'] = 'strpos';
+    $settings['func'] = $is_multibyte ? 'mb_strpos' : 'strpos';
   }
-  else if (!$settings['word_boundaries'] && !$settings['case_sensitive']) {
-    $settings['func'] = 'stripos';
+  elseif (!$settings['word_boundaries'] && !$settings['case_sensitive']) {
+    $settings['func'] = $is_multibyte ? 'mb_stripos' : 'stripos';
   }
   else {
     foreach ($settings['word_list'] as &$word) {
-      $word = '/\b' . $word . '\b/';
-
+      if (!preg_match('/^\w.*\w$/', $word)) {
+        form_set_error('settings][words', t('Seach text must begin and end with a letter, number, or underscore to use the %option option.<br />%word', array('%option' => 'Respect word boundaries', '%word' => $word)));
+      }
+      $word = '/\b\Q' . $word . '\E\b/';
       if (!$settings['case_sensitive']) {
         $word .= 'i';
+      }
+      if ($is_multibyte) {
+        $word .= 'u';
       }
     }
     $settings['regex'] = TRUE;
