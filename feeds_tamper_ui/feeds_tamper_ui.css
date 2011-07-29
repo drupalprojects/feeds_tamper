@@ -1,4 +1,3 @@
-
 .feeds-tamper-table {
   margin-top: 3em;
 }
@@ -25,4 +24,16 @@
 
 .feeds-tamper-table .feeds-tamper-add {
   line-height: 1.2em;
+}
+
+/* Style add plugin form. */
+
+/* hide the next button when not degrading to non-javascript browser */
+html.js .no-js {
+  display: none;
+}
+
+/* Make Choose button come up next to select. */
+#edit-plugin-id-wrapper {
+  display: inline-block;
 }
