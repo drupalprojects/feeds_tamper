@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Convert text to upper, lower, or title case.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_convert_case_form',
   'callback' => 'feeds_tamper_convert_case_callback',

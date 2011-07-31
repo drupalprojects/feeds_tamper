@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Filter based on a list of words/phrases.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_keyword_filter_form',
   'callback' => 'feeds_tamper_keyword_filter_callback',

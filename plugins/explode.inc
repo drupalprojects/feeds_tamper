@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Break up text on every specified delimeter.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_explode_form',
   'callback' => 'feeds_tamper_explode_callback',
@@ -23,7 +28,7 @@ function feeds_tamper_explode_form($importer, $element_key, $settings) {
     '#title' => t('Limit'),
     '#default_value' => isset($settings['limit']) ? $settings['limit'] : '',
     '#description' => t('If limit is set and positive, the returned items will contain a maximum of limit with the last item containing the rest of string.
-                        If limit is negative, all components except the last -limit are returned. If the limit parameter is zero, then this is treated as 1.'),
+                        If limit is negative, all components except the last -limit are returned. If the limit parameter is zero, then this is treated as 1. If limit is not set, then there will be no limit on the number of items returned.'),
   );
   return $form;
 }

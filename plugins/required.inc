@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Make field required. If not present, the feed item will be removed.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_required_form',
   'callback' => 'feeds_tamper_required_callback',

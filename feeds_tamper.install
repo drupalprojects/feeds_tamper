@@ -1,14 +1,19 @@
 <?php
 
 /**
- *  Implementation of hook_install().
+ * @file
+ * Schema definitions install/update/uninstall hooks.
+ */
+
+/**
+ * Implementation of hook_install().
  */
 function feeds_tamper_install() {
   drupal_install_schema('feeds_tamper');
 }
 
 /**
- *  Implementation of hook_schema().
+ * Implementation of hook_schema().
  */
 function feeds_tamper_schema() {
   $schema = array();
@@ -83,7 +88,7 @@ function feeds_tamper_schema() {
 }
 
 /**
- *  Implementation of hook_uninstall().
+ * Implementation of hook_uninstall().
  */
 function feeds_tamper_uninstall() {
   drupal_uninstall_schema('feeds_tamper');

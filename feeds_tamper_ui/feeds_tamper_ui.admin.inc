@@ -278,7 +278,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   }
   // Set breadcrumb.
   $crumb = drupal_get_breadcrumb();
-  $crumb[] = l(t('Tamper plugins: @importer', array('@importer' => $importer->config['name'])), FEEDS_TAMPER_UI_BASE. '/list/' . $importer->id);
+  $crumb[] = l(t('Tamper plugins: @importer', array('@importer' => $importer->config['name'])), FEEDS_TAMPER_UI_BASE . '/list/' . $importer->id);
   drupal_set_breadcrumb($crumb);
 
   // Set importer and source for use in validate and submit.
@@ -405,7 +405,7 @@ function feeds_tamper_ui_edit_plugin_form(&$form_state, $instance) {
   // Set breadcrumb.
   $importer = feeds_importer($instance->importer);
   $crumb = drupal_get_breadcrumb();
-  $crumb[] = l(t('Tamper plugins: @importer', array('@importer' => $importer->config['name'])), FEEDS_TAMPER_UI_BASE. '/list/' . $importer->id);
+  $crumb[] = l(t('Tamper plugins: @importer', array('@importer' => $importer->config['name'])), FEEDS_TAMPER_UI_BASE . '/list/' . $importer->id);
   drupal_set_breadcrumb($crumb);
 
   $form_state['storage']['instance'] = $instance;
@@ -463,7 +463,7 @@ function feeds_tamper_ui_delete_form(&$form_state, $instance) {
   // Set breadcrumb.
   $importer = feeds_importer($instance->importer);
   $crumb = drupal_get_breadcrumb();
-  $crumb[] = l(t('Tamper plugins: @importer', array('@importer' => $importer->config['name'])), FEEDS_TAMPER_UI_BASE. '/list/' . $importer->id);
+  $crumb[] = l(t('Tamper plugins: @importer', array('@importer' => $importer->config['name'])), FEEDS_TAMPER_UI_BASE . '/list/' . $importer->id);
   drupal_set_breadcrumb($crumb);
 
   $form_state['storage']['instance'] = $instance;

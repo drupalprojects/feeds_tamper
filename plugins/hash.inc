@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Calculate a hash of a feed item.
  */
 
@@ -12,7 +13,7 @@ $plugin = array(
   'category' => 'Other',
 );
 
-function feeds_tamper_hash_form($importer, $element_key, $settings){
+function feeds_tamper_hash_form($importer, $element_key, $settings) {
   return array(
     'help' => array(
       '#value' => t('Makes the value a hash of the values being imported. This allows for importing content that does not have a unique ID.')

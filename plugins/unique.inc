@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Ensure a multi-valued field has unique values.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_unique_form',
   'callback' => 'feeds_tamper_unique_callback',

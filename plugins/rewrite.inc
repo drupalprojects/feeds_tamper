@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Rewrite a field using tokens.
+ */
+
 $plugin = array(
   'form'     => 'feeds_tamper_rewrite_form',
   'callback' => 'feeds_tamper_rewrite_callback',
@@ -25,6 +30,8 @@ function feeds_tamper_rewrite_form($importer, $element_key, $settings) {
   $form['help'] = array(
     '#type' => 'fieldset',
     '#title' => t('Available Replacement Patterns'),
+    '#collapsed' => TRUE,
+    '#collapsible' => TRUE,
     '#value' => theme('item_list', $replace),
   );
   return $form;

@@ -8,7 +8,7 @@
 $plugin = array(
   'form' => 'feeds_tamper_strtotime_form',
   'callback' => 'feeds_tamper_strtotime_callback',
-  'name' => 'String to Unix Timestamp',
+  'name' => 'String to Unix timestamp',
   'multi' => 'loop',
   'category' => 'Text',
 );

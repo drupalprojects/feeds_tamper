@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Strip HTML tags.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_strip_tags_form',
   'callback' => 'feeds_tamper_strip_tags_callback',
@@ -16,7 +21,7 @@ function feeds_tamper_strip_tags_form($importer, $element_key, $settings) {
     '#type' => 'textfield',
     '#title' => t('Allowed tags'),
     '#default_value' => isset($settings['allowed_tags']) ? $settings['allowed_tags'] : '',
-    '#description' => t('A list of allowed tags, such as %a, %b.', array('%a' => '<a>', '%b' => '<em>')),
+    '#description' => t('A list of allowed tags, such as %a%b.', array('%a' => '<a>', '%b' => '<em>')),
   );
   return $form;
 }

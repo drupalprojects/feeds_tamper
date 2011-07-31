@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Make URLs absolute.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_absolute_url_form',
   'callback' => 'feeds_tamper_absolute_url_callback',
@@ -11,15 +16,11 @@ function feeds_tamper_absolute_url_form($importer, $element_key, $settings) {
   $form = array();
   $links = htmlentities('<a href="/stuff/things"> to <a href="http://example.com/stuff/things">');
   $form['info'] = array(
-    '#value' => t('Make URLs in markup absolute. (i.e. ' . $links . ').'),
+    '#value' => t('Make URLs in markup absolute. (i.e. !links).', array('!links' => $links)),
   );
   return $form;
 }
 
-/**
- * @todo
- *   Make this not suck.
- */
 function feeds_tamper_absolute_url_callback($source, $item_key, $element_key, &$field, $settings) {
   static $dom;
 

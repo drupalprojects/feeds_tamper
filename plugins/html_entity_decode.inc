@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Decode HTML entities.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_html_entity_decode_form',
   'callback' => 'feeds_tamper_html_entity_decode_callback',

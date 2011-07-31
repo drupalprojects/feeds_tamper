@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Convert text value to boolean value.
  */
 
@@ -14,7 +15,6 @@ $plugin = array(
 );
 
 function feeds_tamper_convert_boolean_form($importer, $element_key, $settings) {
-  ctools_include('dependent');
   $form = array();
   $form['true_value'] = array(
     '#type' => 'textfield',
@@ -35,21 +35,13 @@ function feeds_tamper_convert_boolean_form($importer, $element_key, $settings) {
     '#type' => 'radios',
     '#title' => t('If no match'),
     '#default_value' => isset($settings['no_match']) ? $settings['no_match'] : 'false',
-    '#options' => array(
-      'true' => ('True'),
-      'false' => t('False'),
-      'null' => t('Null'),
-      'pass' => t('Do not modify'),
-      'other' => t('Other')
-    ),
+    '#options' => array('true' => ('True'), 'false' => t('False'), 'null' => t('Null'), 'pass' => t('Do not modify'), 'other' => t('Other')),
     '#description' => t('The value to set if the true and false values do not match.'),
   );
   $form['other_text'] = array(
     '#type' => 'textfield',
     '#title' => t('Other text'),
     '#default_value' => isset($settings['other_text']) ? $settings['other_text'] : '',
-    '#process' => array('ctools_dependent_process'), // For whatever reason, this isn't working. Deal with later.
-    '#dependency' => array('radio:settings[no_match]' => array('other')),
   );
   return $form;
 }

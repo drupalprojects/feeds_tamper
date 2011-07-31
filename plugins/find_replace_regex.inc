@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Find/replace text using REGEX.
+ */
+
 $plugin = array(
   'form'     => 'feeds_tamper_find_replace_regex_form',
   'callback' => 'feeds_tamper_find_replace_regex_callback',
@@ -15,7 +20,7 @@ function feeds_tamper_find_replace_regex_form($importer, $element_key, $settings
     '#type' => 'textfield',
     '#title' => t('REGEX to find'),
     '#default_value' => isset($settings['find']) ? $settings['find'] : '',
-    '#description' => t(check_plain('A regular expression in the form: /<your regex here>/')),
+    '#description' => t('A regular expression in the form: @regex', array('@regex' => '/<your regex here>/')),
   );
   $form['replace'] = array(
     '#type' => 'textfield',

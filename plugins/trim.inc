@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Remove text or whitespace from the beginning, middle, or both sides of text.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_trim_form',
   'callback' => 'feeds_tamper_trim_callback',

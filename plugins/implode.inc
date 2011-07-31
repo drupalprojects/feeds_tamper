@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Convery an array to a string.
+ */
+
 $plugin = array(
   'form' => 'feeds_tamper_implode_form',
   'callback' => 'feeds_tamper_implode_callback',
