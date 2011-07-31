@@ -251,13 +251,9 @@ function feeds_tamper_form_feeds_ui_mapping_form_alter(&$form, &$form_state) {
     return;
   }
   $newest_source = NULL;
-  $newest_target = NULL;
   foreach ($form['#mappings'] as $mapping) {
     if (strpos($mapping['source'], 'Blank source ') === 0) {
       $newest_source = $mapping['source'];
-    }
-    elseif (strpos($mapping['target'], 'Temporary target ') === 0) {
-      $newest_target = $mapping['target'];
     }
   }
   if (!empty($newest_source)) {
@@ -267,14 +263,6 @@ function feeds_tamper_form_feeds_ui_mapping_form_alter(&$form, &$form_state) {
   }
   else {
     $form['source']['#options']['Blank source 1'] = 'Blank source';
-  }
-  if (!empty($newest_target)) {
-    list(, , $count) = explode(' ', $newest_target);
-    unset($form['target']['#options']['Temporary target 1']);
-    $form['target']['#options']['Temporary target ' . ++$count] = 'Temporary target';
-  }
-  else {
-    $form['target']['#options']['Temporary target 1'] = 'Temporary target';
   }
 }
 

@@ -113,10 +113,14 @@ function feeds_tamper_feeds_data_processor_targets_alter(&$fields, $data_table) 
  * Helper function for hook_feeds_TYPE_processor_target_alter().
  */
 function _feeds_tamper_targets_alter(&$targets) {
-  $targets['feeds_tamper_store'] = array(
+  $targets['feeds_tamper_temp'] = array(
+    'name' => t('Temporary target'),
     'description' => t('A field that stores the source data temporarily so that it can be used with the Feeds Tamper rewrite plugin.'),
+    'callback' => '_feeds_tamper_do_nothing',
   );
 }
+
+function _feeds_tamper_do_nothing() {}
 
 /**
  * Core hooks.
