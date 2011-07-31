@@ -79,24 +79,18 @@ function feeds_tamper_ui_list_form_submit($form, &$form_state) {
   $mappings = element_children($form['mappings']);
   $disabled = array();
   foreach ($mappings as $mapping) {
-    if (isset($form_state['values'][$mapping])) {
-      foreach ($form_state['values'][$mapping]['table'] as $id => $value) {
-        $instance = feeds_tamper_load_instance($id);
-        $weight = (int) $value['weight-' . $id];
-        $disabled[$id] = !(bool) $value['enabled'];
-        if ($instance->weight != $weight) {
-          if ($weight < 0) {
-            drupal_set_message(t('Weight must be greater than or equal to zero.'), 'error');
-            return;
-          }
-          $instance->weight = $weight;
-          feeds_tamper_save_instance($instance);
-        }
+    foreach ($form_state['values'][$mapping]['table'] as $id => $value) {
+      $instance = feeds_tamper_load_instance($id);
+      $weight = (int) $value['weight-' . $id];
+      if ($weight < 0) {
+        drupal_set_message(t('Weight must be greater than or equal to zero.'), 'error');
+        return;
       }
-
+      $instance->weight = $weight;
+      $instance->disabled = !(bool) $value['enabled'];
+      feeds_tamper_save_instance($instance);
     }
   }
-  variable_set('default_feeds_tamper', $disabled);
   drupal_set_message(t('Your changes have been saved.'));
 }
 
@@ -285,7 +279,7 @@ function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
 
 function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
   if ($_POST['op'] == 'Add') {
-    $obj = new stdClass();
+    $obj = feeds_tamper_new_instance();
     $obj->plugin_id = $form_state['values']['plugin_id'];
     if (isset($form_state['values']['settings'])) {
       $obj->settings = $form_state['values']['settings'];

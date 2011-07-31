@@ -197,6 +197,17 @@ function feeds_tamper_form_feeds_ui_mapping_form_alter(&$form, &$form_state) {
  */
 
 /**
+ * Create a new plugin instance with default values filled in.
+ *
+ * @return stdClass
+ *   A new plugin instance object.
+ */
+function feeds_tamper_new_instance() {
+  ctools_include('export');
+  return ctools_export_crud_new('feeds_tamper');
+}
+
+/**
  * Load all plugin instances.
  *
  * @param bool $load_disabled
@@ -242,10 +253,11 @@ function feeds_tamper_load_instance($id) {
  *   SAVED_NEW or SAVED_UPDATED, depending on the operation performed.
  */
 function feeds_tamper_save_instance($instance) {
+  ctools_include('export');
   // It's a new instance, give it the heaviest weight.
-  if (empty($instance->weight)) {
-    $all = feeds_tamper_load_by_importer($instance->importer, TRUE);
-    $all = !empty($all[$instance->source]) ? $all[$instance->source] : array();
+  if (!isset($instance->weight)) {
+    $conditions = array('importer' => $instance->importer, 'source' => $instance->source);
+    $all = ctools_export_load_object('feeds_tamper', 'conditions', $conditions);
     $weight = 0;
     foreach ($all as $i) {
       if ($i->weight >= $weight) {
@@ -254,7 +266,9 @@ function feeds_tamper_save_instance($instance) {
     }
     $instance->weight = $weight;
   }
-  ctools_include('export');
+  $disabled = variable_get('default_feeds_tamper', array());
+  $disabled[$instance->id] = !empty($instance->disabled) ? TRUE : FALSE;
+  variable_set('default_feeds_tamper', $disabled);
   return ctools_export_crud_save('feeds_tamper', $instance);
 }
 

@@ -63,7 +63,6 @@ function feeds_tamper_schema() {
       'weight' => array(
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0,
         'unsigned' => TRUE,
         'description' => 'The weight of a plugin instance. Plugins are executed in order.',
       ),
