@@ -6,130 +6,88 @@
  */
 
 /**
- * Test Feeds Tamper.
+ * Base class for Feeds Tamper tests.
  */
-class FeedsTamperWebTestCase extends FeedsWebTestCase {
+class FeedsTamperWebTestHelper extends FeedsWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name' => 'Feeds Tamper',
-      'description' => 'Regression tests for Feeds Tamper.',
-      'group' => 'Feeds Tamper',
-    );
-  }
   public function setUp() {
-    parent::setUp(array('feeds_tamper', 'feeds_tamper_ui'), array('administer feeds_tamper'));
-    // Set the front page to show 30 nodes so we can easily see what is aggregated.
-    $edit = array('default_nodes_main' => 30);
-    $this->drupalPost('admin/content/node-settings', $edit, 'Save configuration');
+    $args = func_get_args();
+
+    // Build the list of required modules which can be altered by passing in an
+    // array of module names to setUp().
+    if (isset($args[0])) {
+      if (is_array($args[0])) {
+        $modules = $args[0];
+      }
+      else {
+        $modules = $args;
+      }
+    }
+    else {
+      $modules = array();
+    }
+    if (isset($args[1]) && is_array($args[1])) {
+      $permissions = $args[1];
+    }
+    else {
+      $permissions = array();
+    }
+    $modules[] = 'feeds_tamper';
+    parent::setUp($modules, $permissions);
   }
 
-  public function testBasic() {
-    $this->createImporterConfiguration();
-    $this->drupalGet(FEEDS_TAMPER_UI_BASE . '/list/syndication');
-    $this->assertText('There are no mappings defined for this importer.');
-    $this->addMappings('syndication',
-      array(
-        array(
-          'source' => 'title',
-          'target' => 'title',
-          'unique' => FALSE,
-        ),
-        array(
-          'source' => 'guid',
-          'target' => 'guid',
-          'unique' => TRUE,
-        ),
-        array(
-          'source' => 'description',
-          'target' => 'body',
-          'unique' => FALSE,
-        ),
-      )
-    );
-
-    // Check that tamper operation exists on feeds page.
-    $this->drupalGet(FEEDS_TAMPER_UI_FEEDS_BASE . '/list');
-    $this->assertText('Edit | Export | Clone | Delete | Tamper');
-    // Check that configure link exists on mappings page.
-    $this->drupalGet(FEEDS_TAMPER_UI_FEEDS_BASE . '/edit/syndication/mapping');
-    $this->assertRaw('<a href="/' . FEEDS_TAMPER_UI_BASE . '/list/syndication">Configure Feeds Tamper</a>');
-    // Check help text when there are no mappings.
-    $this->drupalGet(FEEDS_TAMPER_UI_BASE . '/list/syndication');
-    $this->assertRaw('Configure plugins to modify Feeds data before it gets saved. Each <a href="/' . FEEDS_TAMPER_UI_FEEDS_BASE . '/edit/syndication/mapping">mapping</a> can be manipulated individually.');
-    // Test basic plugin adding.
-    $settings = array(
-      'settings[mode]' => 0,
-    );
-    $id = $this->addTamperPlugin('syndication', 'title', 'convert_case', $settings);
-    // Create feed node, running import automatically.
-    $this->createFeedNode();
-    // Assert that all titles were uppercased.
-    $this->drupalGet('node');
-    $this->assertUppercaseDevseedFeedContent();
-    $this->toggleTamperPlugin('syndication', 'title', $id);
-    $this->toggleTamperPlugin('syndication', 'title', $id, TRUE);
-    $this->setTamperPluginWeight('syndication', 'title', $id, 2);
-    $this->deleteTamperPlugin($id);
-  }
-
-  function addTamperPlugin($importer_id, $source, $plugin_id, $settings, $description = NULL, $id = NULL) {
-    $plugin = feeds_tamper_get_plugin($plugin_id);
-    $default_description = !empty($plugin['default description']) ? $plugin['default description'] : $plugin['name'];
-    $default_id = feeds_tamper_make_machine($default_description);
-    $url = FEEDS_TAMPER_UI_BASE . '/add/' . $importer_id . '/' . $source;
-    $this->drupalPost($url, array('plugin_id' => $plugin_id), 'Choose');
-
-    // Check that default values were added to form.
-    $this->assertFieldByName('id', $default_id);
-    $this->assertFieldByName('description', $default_description);
-    // Set settings.
-    $edit = array('plugin_id' => $plugin_id);
-    if (!empty($description)) {
-      $edit['description'] = $description;
+  function addTamperPlugin($importer_id, $source, $plugin_id, $settings = array(), $description = '', $id = NULL) {
+    $plugin_info = feeds_tamper_get_plugin($plugin_id);
+    if ($plugin_info['validate']) {
+      $plugin_info['validate']($settings);
     }
-    if (!empty($id)) {
-      $edit['id'] = $id;
+    $plugin = feeds_tamper_new_instance();
+    if (!empty($settings)) {
+      $plugin->settings = $settings;
     }
-    $this->drupalPost(NULL, $edit + $settings, 'Add');
-    $description = !empty($description) ? $description : $default_description;
-    $id = !empty($id) ? $id : $default_id;
-    $id = $importer_id . '-' . feeds_tamper_make_machine($source) . '-' . $id;
-    $instance = feeds_tamper_load_instance($id);
-    $source_name = feeds_tamper_ui_source_name($instance);
-    $this->assertText('Plugin ' . $description . ' was successfully added to ' . $source_name . '.');
+    $plugin->importer = $importer_id;
+    $plugin->source = $source;
+    $plugin->plugin_id = $plugin_id;
+    if (!isset($description)) {
+      $description = $this->randomString(255);
+    }
+    if (!isset($id)) {
+      $id = $this->randomName();
+    }
+    $plugin->id = $id;
+    $plugin->description = $description;
+    $this->assertEqual(SAVED_NEW, feeds_tamper_save_instance($plugin));
+    $result = db_query("SELECT * FROM {feeds_tamper} WHERE id = '%s'", $plugin->id);
+    // test that default weight is added.
+    $instance = db_fetch_object($result);
+    $this->assertTrue(($instance->weight >= 0));
+    $this->assertEqual($instance->description, $description);
+    // Check for only 1 item.
+    $result = db_result(db_query("SELECT COUNT(*) FROM {feeds_tamper} WHERE id = '%s'", $plugin->id));
+    $this->assertIdentical((int) $result, 1);
     return $id;
   }
 
-  function toggleTamperPlugin($importer_id, $source, $id, $enable = FALSE) {
-    $url = FEEDS_TAMPER_UI_BASE . '/list/' . $importer_id;
-    $name = $source . '[table][' . $id . '][enabled]';
-    $this->drupalPost($url, array($name => $enable), 'Save changes');
-    $this->assertFieldByName($name, $enable);
-    $this->assertText('Your changes have been saved.');
+  function disableTamperPlugin($id) {
+    $plugin = feeds_tamper_load_instance($id);
+    $plugin->disabled = TRUE;
+    $this->assertEqual(SAVED_UPDATED, feeds_tamper_save_instance($plugin));
+    // reload and test that changes were kept.
+    $plugin = feeds_tamper_load_instance($id);
+    $this->assertIdentical(TRUE, $plugin->disabled);
   }
 
   function setTamperPluginWeight($importer_id, $source, $id, $weight) {
-    $url = FEEDS_TAMPER_UI_BASE . '/list/' . $importer_id;
-    $name = $source . '[table][' . $id . '][weight-' . $id . ']';
-    $this->drupalPost($url, array($name => $weight), 'Save changes');
-    $this->assertFieldByName($name, $weight);
-    $this->assertText('Your changes have been saved.');
   }
 
   function deleteTamperPlugin($id) {
-    $url = FEEDS_TAMPER_UI_BASE . '/delete/' . $id;
-    $this->drupalGet($url);
-    $instance = feeds_tamper_load_instance($id);
-    $this->assertText('Would you really like to delete the plugin ' . $instance->description . '?');
-    $this->assertText('This action cannot be undone.');
-    $this->drupalPost(NULL, array(), 'Delete');
-    $source_name = feeds_tamper_ui_source_name($instance);
-    $this->assertText('The plugin ' . $instance->description . ' has been deleted from ' . $source_name . '.');
+    feeds_tamper_delete_instance($id);
+    //$source = db_query("SELECT * FROM {feeds_source} WHERE feed_nid = :nid", array(':nid' => $nid))->fetchObject();
   }
 
   function assertUppercaseDevseedFeedContent() {
-    $this->assertText('OPEN ATRIUM TRANSLATION WORKFLOW: TWO WAY TRANSLATION UPDATES');
+    $this->drupalGet('node');
+    $this->assertText('SCALING THE OPEN ATRIUM UI');
     $this->assertText("PERU&#039;S SOFTWARE FREEDOM DAY: IMPRESSIONS &amp; PHOTOS");
     $this->assertText('WEEK IN DC TECH: SEPTEMBER 21 EDITION');
     $this->assertText('INTEGRATING THE SITEMINDER ACCESS SYSTEM IN AN OPEN ATRIUM-BASED INTRANET');
@@ -139,5 +97,152 @@ class FeedsTamperWebTestCase extends FeedsWebTestCase {
     $this->assertText('MAPPING INNOVATION AT THE WORLD BANK WITH OPEN ATRIUM');
     $this->assertText('WEEK IN DC TECH: OCTOBER 5TH EDITION');
     $this->assertText('OPEN ATRIUM TRANSLATION WORKFLOW: TWO WAY TRANSLATION UPDATES');
+  }
+  function assertDevseedFeedContent() {
+    $this->drupalGet('node');
+    $this->asserttext('Scaling the Open Atrium UI');
+    $this->asserttext("Peru&#039;s Software Freedom Day: Impressions &amp; Photos");
+    $this->asserttext('Week in DC Tech: September 21 Edition');
+    $this->asserttext('Integrating the Siteminder Access System in an Open Atrium-based Intranet');
+    $this->asserttext('Open Data for Microfinance: The New MIXMarket.org');
+    $this->asserttext('Week in DC Tech: September 28th Edition');
+    $this->asserttext('September GeoDC Meetup Tonight');
+    $this->asserttext('Mapping Innovation at the World Bank with Open Atrium');
+    $this->asserttext('Week in DC Tech: October 5th Edition');
+    $this->asserttext('Open Atrium Translation Workflow: Two Way Translation Updates');
+  }
+  function assertHashedDevseedFeedContent() {
+    $this->drupalGet('node');
+    $this->asserttext('b728a0d36f2abc82f99800f64ff1cc7c');
+    $this->asserttext('864c9af0c04fc4290538889321d8c168');
+    $this->asserttext('3dcddb2cd4c88075d3e9c0c6a99af1b8');
+    $this->asserttext('4e6fcdd06ddbe8ad9b07924643ba4b24');
+    $this->asserttext('3389e62e06089f83bdeab14673882b3c');
+    $this->asserttext('62e4e60cf9027ebcd9d55417f19c937d');
+    $this->asserttext('5b2560ae104866f4ca8db5a1d5ce4226');
+    $this->asserttext('1424afab6a0a6da70df3ad3577546dc8');
+    $this->asserttext('50084de17b6def3875ab56d0e77c82ed');
+    $this->asserttext('10d4493ce45fba64151388d114c3fe97');
+  }
+}
+
+/**
+ * Simple tests for api functionality.
+ */
+class FeedsTamperWebTestCase extends FeedsTamperWebTestHelper {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Feeds Tamper',
+      'description' => 'Regression tests for Feeds Tamper.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function testBasic() {
+    $this->createImporterConfiguration();
+    $this->addMappings('syndication',
+      array(
+        array(
+          'source' => 'title',
+          'target' => 'title',
+        ),
+        array(
+          'source' => 'guid',
+          'target' => 'guid',
+          'unique' => TRUE,
+        ),
+        array(
+          'source' => 'description',
+          'target' => 'body',
+        ),
+      )
+    );
+    // Set update existing.
+    $this->setSettings('syndication', 'FeedsNodeProcessor', array('update_existing' => 1));
+
+    // Test basic plugin adding.
+    $settings = array(
+      'mode' => 0,
+    );
+    $id = $this->addTamperPlugin('syndication', 'title', 'convert_case', $settings);
+    // Create feed node, running import automatically.
+    $nid = $this->createFeedNode();
+    // Assert that all titles were uppercased.
+    $this->assertUppercaseDevseedFeedContent();
+    // Disable plugin.
+    $this->disableTamperPlugin($id);
+    //$this->deleteTamperPlugin($id);
+    $this->drupalPost('node/' . $nid . '/import', array(), 'Import');
+    $this->assertText('Updated 10 Story nodes.');
+    $this->assertDevseedFeedContent();
+  }
+}
+
+/**
+ * Tests the special case that is FeedsCSVParser.
+ */
+class FeedsTamperCSVTestCase extends FeedsTamperWebTestHelper {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Special case: CSV parser',
+      'description' => 'Tests the special case that is FeedsCSVParser. See <a href="http://drupal.org/node/1133724" target="_blank">#1133724</a>.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $importer = $this->randomName();
+    $importer_name = $this->randomString();
+    // Set up an importer.
+    $this->createImporterConfiguration($importer_name, $importer);
+    // Set and configure plugins and mappings.
+    $this->setPlugin($importer, 'FeedsCSVParser');
+    // We have a space in the source cause that was a problem at one point.
+    $mappings = array(
+      '0' => array(
+        'source' => 'a Title',
+        'target' => 'title',
+      ),
+      '1' => array(
+        'source' => 'a Body',
+        'target' => 'body',
+      ),
+      '2' => array(
+        'source' => 'a GUID',
+        'target' => 'guid',
+        'unique' => TRUE,
+      ),
+    );
+    $this->addMappings($importer, $mappings);
+    // Set update existing.
+    $this->setSettings($importer, 'FeedsNodeProcessor', array('update_existing' => 1));
+
+    // Test basic plugin adding.
+    $settings = array(
+      'mode' => 0,
+    );
+    $id = $this->addTamperPlugin($importer, 'a Title', 'convert_case', $settings);
+    $id2 = $this->addTamperPlugin($importer, 'a Body', 'convert_case', $settings);
+
+    $path = $GLOBALS['base_url'] . '/' . drupal_get_path('module', 'feeds_tamper') . '/tests/feeds_tamper/';
+    $nid = $this->createFeedNode($importer, $path . 'csv_test.csv', 'Testing CSV Parser');
+    $this->assertText('Page Testing CSV Parser has been created.');
+    $this->assertText('Created 2 Story nodes.');
+    $this->drupalGet('node');
+    $this->assertText('HELLO WORLD');
+    $this->assertText('THIS IS A GREAT BODY.');
+    $this->assertText('WORLD DOES NOT RESPOND');
+    $this->assertText('THIS IS A SAD BODY.');
+    $this->disableTamperPlugin($id);
+    $this->disableTamperPlugin($id2);
+    $this->drupalPost('node/' . $nid . '/import', array(), 'Import');
+    $this->assertText('Updated 2 Story nodes.');
+    $this->drupalGet('node');
+    $this->assertText('Hello world');
+    $this->assertText('This is a great body.');
+    $this->assertText('World does not respond');
+    $this->assertText('This is a sad body.');
   }
 }

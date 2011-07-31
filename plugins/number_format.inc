@@ -29,7 +29,7 @@ function feeds_tamper_number_format_form($importer, $element_key, $settings) {
   );
   $form['thousands_sep'] = array(
     '#type' => 'textfield',
-    '#title' => t('Decimal point'),
+    '#title' => t('Thousands separator'),
     '#default_value' => isset($settings['thousands_sep']) ? $settings['thousands_sep'] : ',',
     '#description' => t('The character to use as the thousands separator.'),
   );

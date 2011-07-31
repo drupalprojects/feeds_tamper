@@ -15,7 +15,7 @@ function feeds_tamper_truncate_text_form($importer, $element_key, $settings) {
     '#type' => 'textfield',
     '#title' => t('Number of characters'),
     '#default_value' => isset($settings['num_char']) ? $settings['num_char'] : '',
-    '#description' => t('The characters of characters a string can be.'),
+    '#description' => t('The number of characters the text will be limited to.'),
   );
   $form['ellipses'] = array(
     '#type' => 'checkbox',
