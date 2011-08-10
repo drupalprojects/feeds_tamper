@@ -335,14 +335,19 @@ class FeedsTamperHashTestCase extends FeedsTamperUnitTestCase {
   }
 
   public function test() {
+    $item = array('title' => 'Yay title!', 'body' => 'Yay body!', 'hash' => 'asdfasf');
+    $settings = array('override' => TRUE);
+    $this->executeHash($item, md5(serialize($item)), $settings);
+    // Test override = FALSE.
+    $settings['override'] = FALSE;
+    $this->executeHash($item, 'asdfasf', $settings);
+  }
+  function executeHash($input, $output, $settings) {
     $source = new stdClass();
     $source->batch->items = array();
-    $item = array('title' => 'Yay title!', 'body' => 'Yay body!', 'hash' => 'asdfasf');
-    $source->batch->items[] = $item;
-    $this->callback($source, 0, 'hash', $source->batch->items[0]['hash']);
-    // Callback should set it's own field to NULL before hashing.
-    $item['hash'] = NULL;
-    $this->assertEqual($source->batch->items[0]['hash'], md5(serialize($item)));
+    $source->batch->items[] = $input;
+    $this->callback($source, 0, 'hash', $source->batch->items[0]['hash'], $settings);
+    $this->assertIdentical($source->batch->items[0]['hash'], $output);
   }
 }
 
