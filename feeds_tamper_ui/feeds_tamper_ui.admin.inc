@@ -357,7 +357,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
 }
 
 function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
-  if ($_POST['op'] == 'Add') {
+  if ($form_state['clicked_button']['#value'] == t('Add')) {
     $plugin_id = $form_state['values']['plugin_id'];
     $plugin = feeds_tamper_get_plugin($plugin_id);
     if (!empty($plugin['validate']) && isset($form_state['values']['settings'])) {
@@ -376,7 +376,7 @@ function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
 }
 
 function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
-  if ($_POST['op'] == 'Add') {
+  if ($form_state['clicked_button']['#value'] == t('Add')) {
     $obj = feeds_tamper_new_instance();
     $obj->plugin_id = $form_state['values']['plugin_id'];
     if (isset($form_state['values']['settings'])) {
