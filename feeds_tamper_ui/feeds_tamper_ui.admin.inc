@@ -306,7 +306,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   $plugin = feeds_tamper_get_plugin($machine_name);
 
   $form['plugin_id'] = array(
-    '#title' => 'The plugin to add',
+    '#title' => t('The plugin to add'),
     '#type' => 'select',
     '#options' => $plugins,
     '#default_value' => $machine_name,

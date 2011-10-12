@@ -29,7 +29,7 @@ function feeds_tamper_rewrite_form($importer, $element_key, $settings) {
   );
   $form['help'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Available Replacement Patterns'),
+    '#title' => t('Available replacement patterns'),
     '#collapsed' => FALSE,
     '#collapsible' => TRUE,
     '#value' => theme('item_list', $replace),

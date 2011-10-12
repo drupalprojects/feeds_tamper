@@ -522,6 +522,36 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
 }
 
 /**
+ * Tests for math.inc
+ */
+class FeedsTamperMathTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'math';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: Math',
+      'description' => 'Unit tests for "Math" plugin.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $settings = array(
+      'operation' => 'addition',
+      'value' => '2',
+    );
+    $this->execute(2, 4, $settings);
+    $settings['operation'] = 'subtraction';
+    $this->execute(2, 0, $settings);
+    $settings['operation'] = 'multiplication';
+    $this->execute(2, 4, $settings);
+    $settings['operation'] = 'division';
+    $this->execute(2, 1, $settings);
+  }
+}
+
+/**
  * Tests for number_format.inc
  */
 class FeedsTamperNumberFormatTestCase extends FeedsTamperUnitTestCase {

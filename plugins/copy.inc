@@ -24,7 +24,7 @@ function feeds_tamper_copy_form($importer, $element_key, $settings) {
     '#type' => 'radios',
     '#default_value' => isset($settings['to_from']) ? $settings['to_from'] : 'to',
     '#options' => array('to' => t('To'), 'from' => t('From')),
-    '#description' => t('Select wheter this source value should be copied <em>to</em> another source, or <em>from</em> another source to this one.'),
+    '#description' => t('Select whether this source value should be copied <em>to</em> another source, or <em>from</em> another source to this one.'),
   );
 
   $form['source'] = array(
