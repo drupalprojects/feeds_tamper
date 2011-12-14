@@ -265,8 +265,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   drupal_add_js(drupal_get_path('module', 'feeds_ui') .'/feeds_ui.js');
   // Workaround some bug unserializing $_SESSION stuff. Most likely related to
   // ajax.
-  // @todo
-  //  Fix this properly.
+  // @todo Fix this properly.
   if (get_class($importer) == '__PHP_Incomplete_Class') {
     foreach ($importer as $key => $value) {
       if ($key == 'id') {
