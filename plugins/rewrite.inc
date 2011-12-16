@@ -17,7 +17,7 @@ function feeds_tamper_rewrite_form($importer, $element_key, $settings) {
   $form = array();
   // The CSV parser automagically lowercases all sources.
   $is_csv = FALSE;
-  if (get_class($importer) == 'FeedsCSVParser') {
+  if (get_class($importer->parser) == 'FeedsCSVParser') {
     $is_csv = TRUE;
   }
   $mappings = $importer->processor->config['mappings'];
