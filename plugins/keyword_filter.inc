@@ -59,7 +59,7 @@ function feeds_tamper_keyword_filter_validate(&$settings) {
   }
   else {
     foreach ($settings['word_list'] as &$word) {
-      if (!preg_match('/^\w.*\w$/', $word)) {
+      if (!preg_match('/^\w(.*\w)?$/', $word)) {
         form_set_error('settings][words', t('Search text must begin and end with a letter, number, or underscore to use the %option option.<br />%word', array('%option' => 'Respect word boundaries', '%word' => $word)));
       }
       $word = '/\b\Q' . $word . '\E\b/';
