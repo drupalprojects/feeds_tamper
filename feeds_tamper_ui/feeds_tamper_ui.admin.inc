@@ -47,7 +47,7 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
     $map[$i]['#tree'] = TRUE;
     $map[$i]['table'] = array();
     // "Add plugin" link.
-    $add = FEEDS_TAMPER_UI_BASE . '/add/' . $importer->id . '/' . $source;
+    $add = FEEDS_TAMPER_UI_BASE . '/add/' . $importer->id . '/' . $i;
     $map[$i]['#add_link'] = l(t('Add plugin'), $add);
 
     // There are no plugins for this source. We've built all we need to.
@@ -259,6 +259,7 @@ function theme_feeds_tamper_ui_list_form($form) {
 }
 
 function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
+  $source = rawurldecode($source);
   // Add css.
   drupal_add_css(drupal_get_path('module', 'feeds_tamper_ui') . '/feeds_tamper_ui.css');
   // Steal Feeds JS for machine_name goodness.
