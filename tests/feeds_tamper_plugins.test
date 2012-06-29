@@ -728,8 +728,8 @@ class FeedsTamperStrToTimeTestCase extends FeedsTamperUnitTestCase {
   }
 
   public function test() {
-    $this->execute('1986-05-09', 515995200);
-    $this->execute('May 9, 1986', 515995200);
+    $this->execute('1986-05-09 04:00:00 GMT', 515995200);
+    $this->execute('May 9, 1986 04:00:00 GMT', 515995200);
     $this->execute('Fri, 09 May 1986 04:00:00 GMT', 515995200);
   }
 }
