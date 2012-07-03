@@ -33,14 +33,12 @@ function feeds_tamper_truncate_text_form($importer, $element_key, $settings) {
 
 function feeds_tamper_truncate_text_validate($settings) {
   $settings['num_char'] = trim($settings['num_char']);
-  if (!ctype_digit($settings['num_char'])) {
+  if (empty($settings['num_char']) ||
+      ((string) $settings['num_char'] !== (string) (int) $settings['num_char'])) {
     form_set_error('settings][num_char', t('Needs to be an integer.'));
   }
 }
 
 function feeds_tamper_truncate_text_callback($source, $item_key, $element_key, &$field, $settings) {
-  $field = drupal_substr($field, 0, $settings['num_char']);
-  if ($settings['ellipses']) {
-    $field .= '...';
-  }
+  $field = truncate_utf8($field, $settings['num_char'], FALSE, $settings['ellipses']);
 }
