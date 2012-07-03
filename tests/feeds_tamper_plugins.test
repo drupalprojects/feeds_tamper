@@ -13,9 +13,9 @@ class FeedsTamperUnitTestCase extends DrupalUnitTestCase {
 
   public function setUp() {
     parent::setUp();
-    GLOBAL $plugin;
     $plugin = NULL;
-    require_once $file = drupal_get_path('module', 'feeds_tamper') . '/plugins/' . $this->plugin_id . '.inc';
+    $file = drupal_get_path('module', 'feeds_tamper') . '/plugins/' . $this->plugin_id . '.inc';
+    require_once $file;
     $this->plugin_info = $plugin;
   }
 
@@ -26,17 +26,29 @@ class FeedsTamperUnitTestCase extends DrupalUnitTestCase {
   function validate(&$settings = array()) {
     if (!empty($this->plugin_info['validate'])) {
       $this->plugin_info['validate']($settings);
+      if ($errors = form_get_errors()) {
+        foreach ($errors as $key => $value) {
+          $this->error(t('Input error on %key with value %value.', array('%key' => $key, '%value' => $value)));
+        }
+      }
     }
   }
 
-  function callback($result, $item_key, $element_key, &$field, $settings = array()) {
-    $this->plugin_info['callback']($result, $item_key, $element_key, $field, $settings);
+  function callback($source, $item_key, $element_key, &$field, $settings = array()) {
+    $this->plugin_info['callback']($source, $item_key, $element_key, $field, $settings);
   }
 
   function execute($input, $output, $settings = array()) {
     $this->validate($settings);
     $this->callback(NULL, NULL, NULL, $input, $settings);
     $this->assertEqual($input, $output);
+  }
+
+  function createSource() {
+    $source = new stdClass();
+    $source->batch = new stdClass();
+    $source->batch->items = array();
+    return $source;
   }
 }
 
@@ -56,14 +68,18 @@ class FeedsTamperAbsoluteURLTestCase extends FeedsTamperUnitTestCase {
   }
 
   public function test() {
-    $this->execute('http://example.com', '<a href="dog"></a>', '<a href="http://example.com/dog"></a>');
-    $this->execute('http://example.com/cat/chicken', '<a href="dog"></a>', '<a href="http://example.com/cat/chicken/dog"></a>');
-    $this->execute('http://example.com/cat', '<a href="/dog"></a>', '<a href="http://example.com/dog"></a>');
-    $this->execute('http://example.com', '<a href="/dog"></a><img src="/kitty" />', '<a href="http://example.com/dog"></a><img src="http://example.com/kitty" />');
+    $this->executeAbs('http://example.com', '<a href="dog"></a>', '<a href="http://example.com/dog"></a>');
+    $this->executeAbs('http://example.com/cat/chicken', '<a href="dog"></a>', '<a href="http://example.com/cat/chicken/dog"></a>');
+    $this->executeAbs('http://example.com/cat', '<a href="/dog"></a>', '<a href="http://example.com/dog"></a>');
+    $this->executeAbs('http://example.com', '<a href="/dog"></a><img src="/kitty" />', '<a href="http://example.com/dog"></a><img src="http://example.com/kitty" />');
+    $this->executeAbs('http://example.com', '<img src="/kitty" />', '<img src="http://example.com/kitty" />');
+    $this->executeAbs('http://example.com', '<img src="kitty" />', '<img src="http://example.com/kitty" />');
+    $this->executeAbs('http://example.com', '<img src="/kitty.png" />', '<img src="http://example.com/kitty.png" />');
+    $this->executeAbs('http://example.com', '<img src="/frog/kitty.png" />', '<img src="http://example.com/frog/kitty.png" />');
   }
 
-  function execute($link, $html_in, $html_out) {
-    $source = new stdClass();
+  function executeAbs($link, $html_in, $html_out) {
+    $source = $this->createSource();
     $source->batch->link = $link;
     $this->callback($source, NULL, NULL, $html_in, array());
     $this->assertEqual($html_in, $html_out);
@@ -162,17 +178,16 @@ class FeedsTamperCopyTestCase extends FeedsTamperUnitTestCase {
       'title' => 'This is a title',
       'body' => 'This is a body',
     );
-    $this->execute($item, 'title', $settings);
+    $this->executeCop($item, 'title', $settings);
     $settings = array(
       'to_from' => 'from',
       'source' => 'body',
     );
-    $this->execute($item, 'title', $settings);
+    $this->executeCop($item, 'title', $settings);
   }
 
-  function execute($input, $element_key, $settings) {
-    $source = new stdClass();
-    $source->batch->items = array();
+  function executeCop($input, $element_key, $settings) {
+    $source = $this->createSource();
     $source->batch->items[] = $input;
     $this->callback($source, 0, $element_key, $source->batch->items[0][$element_key], $settings);
     $this->assertEqual($source->batch->items[0][$element_key], $source->batch->items[0][$settings['source']]);
@@ -221,6 +236,8 @@ class FeedsTamperExplodeTestCase extends FeedsTamperUnitTestCase {
       'limit' => NULL,
     );
     $this->execute('a,b,c,d', array('a', 'b', 'c', 'd'), $settings);
+    $this->execute('1,2,3,4', array('1', '2', '3', '4'), $settings);
+    $this->execute('123,1.23,abc,456 ,789,def890', array('123', '1.23', 'abc', '456 ', '789', 'def890'), $settings);
     $settings['limit'] = 2;
     $this->execute('a,b,c,d', array('a', 'b,c,d'), $settings);
     $this->execute('a.b.c.d', array('a.b.c.d'), $settings);
@@ -228,6 +245,10 @@ class FeedsTamperExplodeTestCase extends FeedsTamperUnitTestCase {
     $settings['limit'] = NULL;
     $this->execute(array('a,b,c,d', 'e,f,g,h'), array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'), $settings);
     $this->execute(array('abcd', 'e,f,g,h'), array('abcd', 'e', 'f', 'g', 'h'), $settings);
+    // Test negative values.
+    //$settings['limit'] = 2;
+    //$this->execute('a,b,c,d', array('a', 'b,c,d'), $settings);
+    //$this->execute('a.b.c.d', array('a.b.c.d'), $settings);
   }
 }
 
@@ -343,8 +364,7 @@ class FeedsTamperHashTestCase extends FeedsTamperUnitTestCase {
     $this->executeHash($item, 'asdfasf', $settings);
   }
   function executeHash($input, $output, $settings) {
-    $source = new stdClass();
-    $source->batch->items = array();
+    $source = $this->createSource();
     $source->batch->items[] = $input;
     $this->callback($source, 0, 'hash', $source->batch->items[0]['hash'], $settings);
     $this->assertIdentical($source->batch->items[0]['hash'], $output);
@@ -446,6 +466,8 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
       'title' => 'This is a title',
       'body' => 'hello body',
     );
+
+    // Test stripos(), filter.
     $settings = array(
       'words' => 'booya',
       'word_boundaries' => FALSE,
@@ -453,6 +475,8 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
       'invert' => FALSE,
     );
     $this->executeKey($item, array(), 'title', $settings);
+
+    // Test stripos(), pass.
     $settings = array(
       'words' => 'this',
       'word_boundaries' => FALSE,
@@ -460,26 +484,57 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
       'invert' => FALSE,
     );
     $this->executeKey($item, array($item), 'title', $settings);
-    $settings['case_sensitive'] = TRUE;
+
+    // Test strpos(), filter.
+    $settings = array(
+      'words' => 'this',
+      'word_boundaries' => FALSE,
+      'case_sensitive' => TRUE,
+      'invert' => FALSE,
+    );
     $this->executeKey($item, array(), 'title', $settings);
+
+    // Test exact, filter.
+    $settings = array(
+      'words' => 'a title',
+      'word_boundaries' => TRUE,
+      'case_sensitive' => FALSE,
+      'invert' => FALSE,
+      'exact' => TRUE,
+    );
+    $this->executeKey($item, array(), 'title', $settings);
+
+    // Test exact, filter.
+    $settings = array(
+      'words' => 'This is a title',
+      'word_boundaries' => TRUE,
+      'case_sensitive' => FALSE,
+      'invert' => FALSE,
+      'exact' => TRUE,
+    );
+    $this->executeKey($item, array($item), 'title', $settings);
+
+    // Test word boundaries.
     $item = array(
       'title' => 'This is atitle',
       'body' => 'hello body',
     );
+
     $settings = array(
       'words' => 'title',
-      'word_boundaries' => FALSE,
+      'word_boundaries' => TRUE,
       'case_sensitive' => FALSE,
       'invert' => FALSE,
     );
-    $this->executeKey($item, array($item), 'title', $settings);
-    $settings['word_boundaries'] = TRUE;
     $this->executeKey($item, array(), 'title', $settings);
-    // invert = TRUE.
+
+    // Test invert = TRUE.
     $item = array(
       'title' => 'This is a title',
       'body' => 'hello body',
     );
+
+    // Test stripos() pass.
     $settings = array(
       'words' => 'booya',
       'word_boundaries' => FALSE,
@@ -487,6 +542,8 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
       'invert' => TRUE,
     );
     $this->executeKey($item, array($item), 'title', $settings);
+
+    // Test stripos() filter.
     $settings = array(
       'words' => 'this',
       'word_boundaries' => FALSE,
@@ -494,26 +551,52 @@ class FeedsTamperKeyWordFilterTestCase extends FeedsTamperUnitTestCase {
       'invert' => TRUE,
     );
     $this->executeKey($item, array(), 'title', $settings);
-    $settings['case_sensitive'] = TRUE;
+
+    // Test strpos(), pass.
+    $settings = array(
+      'words' => 'this',
+      'word_boundaries' => FALSE,
+      'case_sensitive' => TRUE,
+      'invert' => TRUE,
+    );
     $this->executeKey($item, array($item), 'title', $settings);
+
+    // Test exact, pass.
+    $settings = array(
+      'words' => 'a title',
+      'word_boundaries' => TRUE,
+      'case_sensitive' => FALSE,
+      'invert' => TRUE,
+      'exact' => TRUE,
+    );
+    $this->executeKey($item, array($item), 'title', $settings);
+
+    // Test exact, filter.
+    $settings = array(
+      'words' => 'This is a title',
+      'word_boundaries' => TRUE,
+      'case_sensitive' => FALSE,
+      'invert' => TRUE,
+      'exact' => TRUE,
+    );
+    $this->executeKey($item, array(), 'title', $settings);
+
+    // Test word boundaries, pass.
     $item = array(
       'title' => 'This is atitle',
       'body' => 'hello body',
     );
     $settings = array(
       'words' => 'title',
-      'word_boundaries' => FALSE,
+      'word_boundaries' => TRUE,
       'case_sensitive' => FALSE,
       'invert' => TRUE,
     );
-    $this->executeKey($item, array(), 'title', $settings);
-    $settings['word_boundaries'] = TRUE;
     $this->executeKey($item, array($item), 'title', $settings);
   }
 
   function executeKey($item, $output, $element_key, $settings) {
-    $source = new stdClass();
-    $source->batch->items = array();
+    $source = $this->createSource();
     $source->batch->items[] = $item;
     $this->validate($settings);
     $this->callback($source, 0, NULL, $source->batch->items[0][$element_key], $settings);
@@ -601,17 +684,17 @@ class FeedsTamperRequiredTestCase extends FeedsTamperUnitTestCase {
     );
   }
 
-  function execute($input, $output, $element_key) {
-    $source = new stdClass();
-    $source->batch->items = $input;
-    foreach ($source->batch->items as $item_key => &$item) {
-      foreach ($item as $key => &$i) {
-        if ($element_key == $key) {
-          $this->callback($source, $item_key, $element_key, $i, array());
+  function executeReq($input, $output, $source) {
+    $source_ = $this->createSource();
+    $source_->batch->items = $input;
+    foreach ($source_->batch->items as $key => &$item) {
+      foreach ($item as $element_key => &$i) {
+        if ($source == $element_key) {
+          $this->callback($source_, $key, $element_key, $i, array());
         }
       }
     }
-    $this->assertEqual($source->batch->items, $output);
+    $this->assertEqual($source_->batch->items, $output);
   }
 
   public function test() {
@@ -621,7 +704,7 @@ class FeedsTamperRequiredTestCase extends FeedsTamperUnitTestCase {
     $input[] = array('s1' => 'sdafasf', 's2' => 'asdfsf', 's3' => 'asdfasf');
     $output = $input;
     unset($output[1]);
-    $this->execute($input, $output, 's3');
+    $this->executeReq($input, $output, 's3');
   }
 }
 
@@ -640,11 +723,11 @@ class FeedsTamperRewriteTestCase extends FeedsTamperUnitTestCase {
     );
   }
 
-  function execute($input, $output, $element_key, $settings) {
-    $source = new stdClass();
+  function executeRew($input, $output, $source_key, $settings) {
+    $source = $this->createSource();
     $source->batch->items = array($input);
-    $this->callback($source, 0, $element_key, $source->batch->items[0][$element_key], $settings);
-    $this->assertEqual($source->batch->items[0][$element_key], $output);
+    $this->callback($source, 0, $source_key, $source->batch->items[0][$source_key], $settings);
+    $this->assertEqual($source->batch->items[0][$source_key], $output);
   }
 
   public function test() {
@@ -654,7 +737,7 @@ class FeedsTamperRewriteTestCase extends FeedsTamperUnitTestCase {
       'body' => "I'm the coolest.",
       'combined' => 'Blah, blah, blah',
     );
-    $this->execute($input, "HI YA! - I'm the coolest.", 'combined', $settings);
+    $this->executeRew($input, "HI YA! - I'm the coolest.", 'combined', $settings);
   }
 }
 
@@ -735,6 +818,30 @@ class FeedsTamperStrToTimeTestCase extends FeedsTamperUnitTestCase {
 }
 
 /**
+ * Tests for timetodate.inc
+ */
+class FeedsTamperTimeToDateTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'timetodate';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: Unix timestamp to Date',
+      'description' => 'Unit tests for the "Unix timestamp to Date" plugin.',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $settings = array(
+      'date_format' => "\I\\t'\s g \o'\c\l\o\c\k \J\i\m\.",
+    );
+    // Use mktime() so that test works in different timezones.
+    $this->execute(mktime(7), "It's 7 o'clock Jim.", $settings);
+  }
+}
+
+/**
  * Tests for trim.inc
  */
 class FeedsTamperTrimTestCase extends FeedsTamperUnitTestCase {
@@ -781,7 +888,8 @@ class FeedsTamperTruncateTextTestCase extends FeedsTamperUnitTestCase {
 
   public function test() {
     $this->execute('Hello, how are you today?', 'Hello', array('num_char' => 5, 'ellipses' => FALSE));
-    $this->execute('Hello, how are you today?', 'Hello...', array('num_char' => 5, 'ellipses' => TRUE));
+    $this->execute('Hello, how are you today?', 'H ...', array('num_char' => 5, 'ellipses' => TRUE));
+    $this->execute('Hello', 'Hello', array('num_char' => 5, 'ellipses' => TRUE));
   }
 }
 
