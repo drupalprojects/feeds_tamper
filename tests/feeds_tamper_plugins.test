@@ -53,6 +53,31 @@ class FeedsTamperUnitTestCase extends DrupalUnitTestCase {
 }
 
 /**
+ * Tests for array_filter.inc
+ */
+class FeedsTamperArrayFilterTestCase extends FeedsTamperUnitTestCase {
+
+  protected $plugin_id = 'array_filter';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Plugins: Filter empty items',
+      'description' => 'Unit tests for "Filter empty items".',
+      'group' => 'Feeds Tamper',
+    );
+  }
+
+  public function test() {
+    $this->executeFilter(array('asdf', 0, FALSE, '', 1234), array('asdf', 1234));
+  }
+
+  function executeFilter($in_array, $out_array) {
+    $this->callback(NULL, NULL, NULL, $in_array);
+    $this->assertEqual($in_array, $out_array);
+  }
+}
+
+/**
  * Tests for absolute_url.inc
  */
 class FeedsTamperAbsoluteURLTestCase extends FeedsTamperUnitTestCase {
