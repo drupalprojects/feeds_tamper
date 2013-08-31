@@ -128,6 +128,10 @@ function feeds_tamper_load_by_importer($importer, $disabled = FALSE) {
   // Sort into array, keyed by source.
   $instances = array();
   foreach ($t as $i) {
+    // Add an empty settings array, if the plugin instance doesn't provide any settings itself.
+    if (empty($i->settings)) {
+      $i->settings = array();
+    }
     // Filter disabled and only pull plugins that actually have a corresponding
     // source since we don't delete them with a mapping.
     if (($disabled || empty($i->disabled)) && in_array($i->source, $sources)) {
