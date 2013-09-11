@@ -52,6 +52,11 @@ function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $so
     foreach ($importer_instances as $element_key => $instances) {
       if (isset($item[$element_key])) {
         foreach ($instances as $instance) {
+          // If the item was unset by previous plugin, jump ahead.
+          if (!isset($result->items[$item_key])) {
+            break 2;
+          }
+
           $plugin = $plugins[$instance->plugin_id];
           $is_array = is_array($item[$element_key]);
 
