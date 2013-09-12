@@ -29,12 +29,19 @@ function feeds_tamper_absolute_url_callback($source, $item_key, $element_key, &$
     $dom = new DOMDocument();
   }
 
+  $field = (string) $field;
+
+  if (!$field) {
+    return;
+  }
+
   // Supress warnings for invalid HTML.
   $errors = libxml_use_internal_errors(TRUE);
   $entity_loader = libxml_disable_entity_loader(TRUE);
 
-   $dom->loadHTML($field);
+  $dom->loadHTML($field);
 
+  libxml_clear_errors();
   libxml_use_internal_errors($errors);
   libxml_disable_entity_loader($entity_loader);
 
