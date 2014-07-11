@@ -8,13 +8,13 @@
 /**
  * Load version agnostic code.
  */
-include_once('feeds_tamper.inc');
+require_once dirname(__FILE__) . '/feeds_tamper.inc';
 
 /**
  * Implementation of hook_feeds_after_parse().
  *
- * This is the meat of the whole deal.  After every Feeds run, before going into
- * processing, this gets called and modifies the data based on the configuration.
+ * After every Feeds import, before going into processing, this gets called and
+ * modifies the data based on the configuration.
  */
 function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $source) {
   $importer_instances = feeds_tamper_load_by_importer($source->importer->id, FALSE);
@@ -53,7 +53,7 @@ function feeds_tamper_feeds_after_parse(FeedsImporter $importer, FeedsSource $so
       if (isset($item[$element_key])) {
         foreach ($instances as $instance) {
           // If the item was unset by previous plugin, jump ahead.
-          if (!isset($result->items[$item_key])) {
+          if (!isset($source->batch->items[$item_key])) {
             break 2;
           }
 
