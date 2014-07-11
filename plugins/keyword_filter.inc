@@ -60,20 +60,17 @@ function feeds_tamper_keyword_filter_validate(&$settings) {
   if (!empty($settings['exact']) || $settings['word_boundaries']) {
     foreach ($settings['word_list'] as &$word) {
       if (!empty($settings['exact'])) {
-        $word = '/^\Q' . $word . '\E$/';
+        $word = '/^\Q' . $word . '\E$/u';
       }
       elseif ($settings['word_boundaries']) {
         // Word boundaries can only match a word with letters at the end.
-        if (!preg_match('/^\w(.*\w)?$/', $word)) {
+        if (!preg_match('/^\w(.*\w)?$/u', $word)) {
           form_set_error('settings][words', t('Search text must begin and end with a letter, number, or underscore to use the %option option.<br />%word', array('%option' => 'Respect word boundaries', '%word' => $word)));
         }
-        $word = '/\b\Q' . $word . '\E\b/';
+        $word = '/\b\Q' . $word . '\E\b/u';
       }
       if (!$settings['case_sensitive']) {
         $word .= 'i';
-      }
-      if ($is_multibyte) {
-        $word .= 'u';
       }
     }
     $settings['regex'] = TRUE;
