@@ -42,7 +42,7 @@ function feeds_tamper_find_replace_form($importer, $element_key, $settings) {
     '#type' => 'checkbox',
     '#title' => t('Match whole word/phrase'),
     '#default_value' => isset($settings['whole']) ? $settings['whole'] : FALSE,
-    '#description' => t('If checked, then the whole word or phrase will be matched, e.g. "book" will match not match "book" in "the book".<br />If this option is selected then "Respect word boundaries" above will be ignored.')
+    '#description' => t('If checked, then the whole word or phrase will be matched, e.g. "book" will not match "book" in "the book".<br />If this option is selected then "Respect word boundaries" above will be ignored.')
   );
   return $form;
 }
