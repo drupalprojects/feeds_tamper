@@ -54,7 +54,7 @@ class FeedsTamperUIWebTestCase extends FeedsTamperWebTestHelper {
     $this->assertRaw('<a href="' . url(FEEDS_TAMPER_UI_BASE . '/list/' . $importer) . '">Configure Feeds Tamper</a>');
     // Check help text when there are no mappings.
     $this->drupalGet(FEEDS_TAMPER_UI_BASE . '/list/' . $importer);
-    $this->assertRaw('Configure plugins to modify Feeds data before it gets saved. Each <a href="/' . FEEDS_TAMPER_UI_FEEDS_BASE . '/edit/' . $importer . '/mapping">mapping</a> can be manipulated individually.');
+    $this->assertRaw('Configure plugins to modify Feeds data before it gets saved. Each <a href="' . url(FEEDS_TAMPER_UI_FEEDS_BASE . '/edit/' . $importer . '/mapping') . '">mapping</a> can be manipulated individually.');
     // Test basic plugin adding.
     $settings = array(
       'settings[mode]' => 0,
@@ -252,4 +252,5 @@ class FeedsTamperUIWebTestCase extends FeedsTamperWebTestHelper {
     $result = db_fetch_object(db_query("SELECT * FROM {feeds_tamper} WHERE id = '%s'", $id));
     $this->assertFalse($result);
   }
+
 }
