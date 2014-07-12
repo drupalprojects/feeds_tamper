@@ -126,6 +126,7 @@ class FeedsTamperAbsoluteURLTestCase extends FeedsTamperUnitTestCase {
     $this->executeAbs('http://example.com', '<img src="/frog/kitty.png" />', '<img src="http://example.com/frog/kitty.png" />');
     $this->executeAbs('http://example.com', '', '');
     $this->executeAbs('http://example.com', 'asdf', 'asdf');
+    $this->executeAbs('http://example.com', '<a href="">asdfasdf</a>', '<a href="">asdfasdf</a>');
   }
 
   public function executeAbs($link, $html_in, $html_out) {

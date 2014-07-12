@@ -59,8 +59,13 @@ function feeds_tamper_absolute_url_callback($source, $item_key, $element_key, &$
 }
 
 function _feeds_tamper_absolute_url($r_url, &$urls, $b) {
+  if (!strlen($r_url)) {
+    return;
+  }
+
   $r = parse_url($r_url);
-  if ($r == FALSE) {
+
+  if ($r === FALSE) {
     return;
   }
   if (!empty($r['scheme']) || !empty($r['host'])) {
