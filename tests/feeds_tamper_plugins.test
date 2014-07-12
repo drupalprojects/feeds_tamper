@@ -346,25 +346,25 @@ class FeedsTamperFindReplaceTestCase extends FeedsTamperUnitTestCase {
     $this->execute('The Cat went to the park.', 'The Cat went to the park.', $settings);
     $this->execute('The catwent to the park.', 'The dogwent to the park.', $settings);
     $settings = array(
-      'find' => 'cat',
+      'find' => 'c/at',
       'replace' => 'dog',
       'case_sensitive' => FALSE,
       'word_boundaries' => TRUE,
       'whole' => FALSE,
     );
-    $this->execute('The cat went to the park.', 'The dog went to the park.', $settings);
-    $this->execute('The Cat went to the park.', 'The dog went to the park.', $settings);
-    $this->execute('The catwent to the park.', 'The catwent to the park.', $settings);
+    $this->execute('The c/at went to the park.', 'The dog went to the park.', $settings);
+    $this->execute('The C/at went to the park.', 'The dog went to the park.', $settings);
+    $this->execute('The c/atwent to the park.', 'The c/atwent to the park.', $settings);
     $settings = array(
-      'find' => 'cat',
+      'find' => '/cat',
       'replace' => 'dog',
       'case_sensitive' => FALSE,
       'word_boundaries' => FALSE,
       'whole' => TRUE,
     );
-    $this->execute('The cat went to the park.', 'The cat went to the park.', $settings);
-    $this->execute('cat', 'dog', $settings);
-    $this->execute('Cat', 'dog', $settings);
+    $this->execute('The /cat went to the park.', 'The /cat went to the park.', $settings);
+    $this->execute('/cat', 'dog', $settings);
+    $this->execute('/Cat', 'dog', $settings);
   }
 
 }
