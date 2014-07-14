@@ -49,7 +49,7 @@ function feeds_tamper_rewrite_callback($source, $item_key, $element_key, &$field
   $trans = array();
   $item = $source->batch->items[$item_key];
   foreach ($item as $key => $value) {
-    $trans['[' . $key . ']'] = $value;
+    $trans['[' . $key . ']'] = is_array($value) ? reset($value) : $value;
   }
   $field = strtr($settings['text'], $trans);
 }
