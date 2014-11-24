@@ -69,7 +69,9 @@ function feeds_tamper_ui_menu() {
   $items['feeds_tamper/js'] = array(
     'page callback' => 'feeds_tamper_ui_js',
     'access callback' => TRUE,
-  ) + $defaults;
+    'file' => 'feeds_tamper_ui.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
 
   return $items;
 }
