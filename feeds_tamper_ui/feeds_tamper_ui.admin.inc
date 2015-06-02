@@ -29,26 +29,23 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
     $source = $mapping['source'];
     $target = $mapping['target'];
 
-    // Sources may have spaces in them.
-    $i = rawurlencode($source);
-
     // We will skip building the table if it has been built for a source, but
     // we need to add the target label to indicate to the user that more than
     // one field will be affected.
     $target_label = !empty($targets[$target]['name']) ? check_plain($targets[$target]['name']) : check_plain($target);
-    $map[$i]['#title']['targets'][] = $target_label;
+    $map[$source]['#title']['targets'][] = $target_label;
     // We don't need to build the table again for this source.
-    if (isset($map[$i]['table'])) {
+    if (isset($map[$source]['table'])) {
       continue;
     }
     $source_label = !empty($sources[$source]['name']) ? check_plain($sources[$source]['name']) : check_plain($source);
-    $map[$i]['#title']['source'] = $source_label;
+    $map[$source]['#title']['source'] = $source_label;
 
-    $map[$i]['#tree'] = TRUE;
-    $map[$i]['table'] = array();
+    $map[$source]['#tree'] = TRUE;
+    $map[$source]['table'] = array();
     // "Add plugin" link.
-    $add = FEEDS_TAMPER_UI_BASE . '/add/' . $importer->id . '/' . $i;
-    $map[$i]['#add_link'] = l(t('Add plugin'), $add);
+    $add = FEEDS_TAMPER_UI_BASE . '/add/' . $importer->id . '/' . bin2hex($source);
+    $map[$source]['#add_link'] = l(t('Add plugin'), $add);
 
     // There are no plugins for this source. We've built all we need to.
     if (!isset($instances[$source])) {
@@ -58,10 +55,10 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
 
       // Plugin instance description.
       $description = !empty($instance->description) ? check_plain($instance->description) : $instance->id;
-      $map[$i]['table'][$instance->id]['#description'] = $description;
+      $map[$source]['table'][$instance->id]['#description'] = $description;
 
       // Weight field.
-      $map[$i]['table'][$instance->id]['weight'] = array(
+      $map[$source]['table'][$instance->id]['weight'] = array(
         '#type' => 'textfield',
         '#size' => 5,
         '#default_value' => $instance->weight,
@@ -70,7 +67,7 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
 
       // Name of plugin.
       $plugin = feeds_tamper_get_plugin($instance->plugin_id);
-      $map[$i]['table'][$instance->id]['#name'] = $plugin['name'];
+      $map[$source]['table'][$instance->id]['#name'] = $plugin['name'];
 
       // Calculate where the plugin lives and it's corresponding operations.
       if ($instance->export_type == EXPORT_IN_CODE) {
@@ -90,7 +87,7 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
       }
 
       // Status column, Default, Normal, Overridden.
-      $map[$i]['table'][$instance->id]['#status'] = $status;
+      $map[$source]['table'][$instance->id]['#status'] = $status;
 
       // Build Edit | Delete, Edit | Revert, Override links.
       $ops = l(t($edit), FEEDS_TAMPER_UI_BASE . '/edit/' . $instance->id);
@@ -101,10 +98,10 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
         $ops .= l(t($delete), FEEDS_TAMPER_UI_BASE . '/delete/' . $instance->id);
       }
 
-      $map[$i]['table'][$instance->id]['#edit'] = $ops;
+      $map[$source]['table'][$instance->id]['#edit'] = $ops;
 
       // Enable/disable checkbox.
-      $map[$i]['table'][$instance->id]['enabled'] = array(
+      $map[$source]['table'][$instance->id]['enabled'] = array(
         '#type' => 'checkbox',
         '#default_value' => !$instance->disabled
       );

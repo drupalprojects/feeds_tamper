@@ -48,7 +48,7 @@ function feeds_tamper_ui_menu() {
     'page arguments' => array('feeds_tamper_ui_list_form', 5),
   ) + $defaults;
 
-  $items[FEEDS_TAMPER_UI_BASE . '/add/%feeds_importer/%'] = array(
+  $items[FEEDS_TAMPER_UI_BASE . '/add/%feeds_importer/%feeds_tamper_ui_source'] = array(
     'title callback' => 'feeds_tamper_ui_add_title',
     'title arguments' => array(6),
     'page arguments' => array('feeds_tamper_ui_add_plugin_form', 5, 6),
@@ -92,6 +92,14 @@ function feeds_tamper_ui_theme() {
  */
 function feeds_tamper_plugin_instance_load($instance_id) {
   return feeds_tamper_load_instance($instance_id);
+}
+
+/**
+ * Menu loader callback for grabbing the source from the URL.
+ */
+function feeds_tamper_ui_source_load($source) {
+  // We've HEX encoded the source to allow all possible characters.
+  return pack('H*', $source);
 }
 
 /**

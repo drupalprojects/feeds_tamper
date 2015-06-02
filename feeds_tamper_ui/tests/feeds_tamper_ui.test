@@ -199,7 +199,7 @@ class FeedsTamperUIWebTestCase extends FeedsTamperWebTestHelper {
     $plugin = feeds_tamper_get_plugin($plugin_id);
     $default_description = !empty($plugin['default description']) ? $plugin['default description'] : $plugin['name'];
     $default_id = feeds_tamper_make_machine($default_description);
-    $url = FEEDS_TAMPER_UI_BASE . '/add/' . $importer_id . '/' . $source;
+    $url = FEEDS_TAMPER_UI_BASE . '/add/' . $importer_id . '/' . bin2hex($source);
     $this->drupalPost($url, array('plugin_id' => $plugin_id), 'Choose');
 
     // Check that default values were added to form.
@@ -226,7 +226,7 @@ class FeedsTamperUIWebTestCase extends FeedsTamperWebTestHelper {
   public function toggleTamperPlugin($importer_id, $source, $id, $enable = FALSE) {
     $url = FEEDS_TAMPER_UI_BASE . '/list/' . $importer_id;
 
-    $name = rawurlencode($source) . '[table][' . $id . '][enabled]';
+    $name = $source . '[table][' . $id . '][enabled]';
     $this->drupalPost($url, array($name => $enable), 'Save');
     $this->assertFieldByName($name, $enable);
     $this->assertText('Your changes have been saved.');
@@ -234,7 +234,7 @@ class FeedsTamperUIWebTestCase extends FeedsTamperWebTestHelper {
 
   public function setTamperPluginWeight($importer_id, $source, $id, $weight) {
     $url = FEEDS_TAMPER_UI_BASE . '/list/' . $importer_id;
-    $name = rawurlencode($source) . '[table][' . $id . '][weight]';
+    $name = $source . '[table][' . $id . '][weight]';
     $this->drupalPost($url, array($name => $weight), 'Save');
     $this->assertFieldByName($name, $weight);
     $this->assertText('Your changes have been saved.');
