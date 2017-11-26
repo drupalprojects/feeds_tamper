@@ -1,0 +1,5 @@
+services:
+  feeds_tamper.feeds_subscriber:
+    class: Drupal\feeds_tamper\EventSubscriber\FeedsSubscriber
+    tags:
+      - {name: event_subscriber}
