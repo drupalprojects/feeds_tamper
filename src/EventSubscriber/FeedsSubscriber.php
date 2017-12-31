@@ -28,37 +28,27 @@ class FeedsSubscriber implements EventSubscriberInterface {
    */
   public function afterParse(ParseEvent $event) {
     /** @var \Drupal\feeds\FeedInterface */
-    $feed_type = $event->getFeed();
+    $feed = $event->getFeed();
     /** @var \Drupal\feeds\Result\ParserResultInterface */
     $parser_result = $event->getParserResult();
 
-    /** @var \Drupal\tamper\TamperManagerInterface */
+    /** @var \Drupal\feeds_tamper\FeedTypeTamperMetaInterface */
     // @todo Refactor using dependency injection.
-    $tamper_manager = \Drupal::service('plugin.manager.tamper');
+    $tamper_meta = \Drupal::service('feeds_tamper.feed_type_tamper_manager')->getTamperMeta($feed->getType());
 
-    // @todo load the tamper plugins that need to be applied to Feeds.
-    // $tampers_by_field = feeds_tamper_load_by_importer($feed_type);
-
-    // Temporary hard-coded.
-    // @todo remove later.
-    $tampers_by_field = [
-      'alpha' => [
-        $tamper_manager->createInstance('explode', [
-          'separator' => '|',
-        ]),
-      ],
-    ];
+    // Load the tamper plugins that need to be applied to Feeds.
+    $tampers_by_source = $tamper_meta->getTampersGroupedBySource();
 
     // Abort if there are no tampers to apply on the current feed.
-    if (empty($tampers_by_field)) {
+    if (empty($tampers_by_source)) {
       return;
     }
 
     /** @var \Drupal\feeds\Feeds\Item\ItemInterface */
     foreach ($parser_result as $item) {
-      foreach ($tampers_by_field as $field => $tampers) {
-        // Get the value for a target field.
-        $item_value = $item->get($field);
+      foreach ($tampers_by_source as $source => $tampers) {
+        // Get the value for a source.
+        $item_value = $item->get($source);
 
         /** @var Drupal\tamper\TamperInterface */
         foreach ($tampers as $tamper) {
@@ -88,7 +78,7 @@ class FeedsSubscriber implements EventSubscriberInterface {
         }
 
         // Write the changed value.
-        $item->set($field, $item_value);
+        $item->set($source, $item_value);
       }
     }
   }

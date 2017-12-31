@@ -1,0 +1,30 @@
+# Third party settings for feed type for Feeds Tamper.
+feeds.feed_type.*.third_party.feeds_tamper:
+  type: mapping
+  label: 'Feeds Tamper settings'
+  mapping:
+    tampers:
+      type: sequence
+      sequence:
+        type: feeds_tamper
+
+# Feeds Tamper instance.
+# @todo figure out how to describe additional keys.
+feeds_tamper:
+  type: mapping
+  label: 'Feeds Tamper instance'
+  mapping:
+    uuid:
+      type: uuid
+    plugin:
+      type: string
+      label: 'Tamper plugin ID'
+    source:
+      type: string
+      label: 'Source field'
+    weight:
+      type: integer
+      label: 'Weight'
+    description:
+      type: string
+      label: 'Description'
