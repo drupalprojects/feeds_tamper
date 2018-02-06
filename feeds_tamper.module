@@ -106,31 +106,6 @@ function feeds_tamper_feeds_processor_targets_alter(&$targets, $entity_type, $bu
  */
 
 /**
- * Implements hook_permission().
- */
-function feeds_tamper_permission() {
-  $perms = array(
-    'administer feeds_tamper' => array(
-      'title' => t('Administer Feeds Tamper'),
-      'description' => t('Create, edit and delete plugins for any importer.'),
-    ),
-  );
-
-  // For whatever reason, this gets called withtout the Feeds module being
-  // loaded in certain odd circumstances.
-  if (function_exists('feeds_importer_load_all')) {
-    foreach (feeds_importer_load_all() as $importer) {
-      $name = array('%name' => $importer->config['name']);
-      $perms['tamper ' . $importer->id] = array(
-        'title' => t('Tamper %name feeds', $name),
-        'description' => t('Create, edit and delete plugins for %name feeds.', $name),
-      );
-    }
-  }
-  return $perms;
-}
-
-/**
  * Implements hook_ctools_plugin_type().
  */
 function feeds_tamper_ctools_plugin_type() {
