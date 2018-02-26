@@ -125,6 +125,15 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
   /**
    * {@inheritdoc}
    */
+  public function updateTamper(TamperInterface $tamper, array $configuration) {
+    $this->getTampers()->setInstanceConfiguration($tamper->getSetting('uuid'), $configuration);
+    $this->updateFeedType();
+    return $tamper;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function removeTamper(TamperInterface $tamper) {
     $this->getTampers()->removeInstanceId($tamper->getSetting('uuid'));
     $this->updateFeedType();

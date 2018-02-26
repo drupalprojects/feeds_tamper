@@ -109,6 +109,24 @@ class FeedTypeTamperMetaTest extends KernelTestBase {
   }
 
   /**
+   * @covers ::updateTamper
+   */
+  public function testUpdateTamper() {
+    $separator = ':';
+    $description = 'Explode with pipe character updated';
+    $tamper = $this->feedTypeTamperMeta->getTamper('uuid1');
+    $this->feedTypeTamperMeta->updateTamper($tamper, [
+      'separator' => $separator,
+      'description' => $description,
+    ]);
+    $tampers_config = $this->feedTypeTamperMeta->getTampers()->getConfiguration();
+    $config = $tampers_config['uuid1'];
+
+    $this->assertEquals($separator, $config['separator']);
+    $this->assertEquals($description, $config['description']);
+  }
+
+  /**
    * @covers ::removeTamper
    */
   public function testRemoveTamper() {

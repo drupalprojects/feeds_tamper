@@ -1,0 +1,23 @@
+entity.feeds_feed_type.tamper_add:
+  path: '/admin/structure/feeds/manage/{feeds_feed_type}/tamper/add/{source_field}'
+  defaults:
+    _form: '\Drupal\feeds_tamper\Form\TamperAddForm'
+    _title_callback: '\Drupal\feeds_tamper\Form\TamperAddForm::tamperTitle'
+  requirements:
+    _custom_access: '\Drupal\feeds_tamper\Form\TamperAddForm::checkAccess'
+  options:
+    parameters:
+      feeds_feed_type:
+        type: 'entity:feeds_feed_type'
+
+entity.feeds_feed_type.tamper_edit:
+  path: '/admin/structure/feeds/manage/{feeds_feed_type}/tamper/{tamper_uuid}/edit'
+  defaults:
+    _form: '\Drupal\feeds_tamper\Form\TamperEditForm'
+    _title_callback: '\Drupal\feeds_tamper\Form\TamperEditForm::tamperTitle'
+  requirements:
+    _custom_access: '\Drupal\feeds_tamper\Form\TamperEditForm::checkAccess'
+  options:
+    parameters:
+      feeds_feed_type:
+        type: 'entity:feeds_feed_type'

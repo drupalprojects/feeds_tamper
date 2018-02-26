@@ -49,6 +49,19 @@ interface FeedTypeTamperMetaInterface extends ObjectWithPluginCollectionInterfac
   public function addTamper(array $configuration);
 
   /**
+   * Updates the tamper plugin instance.
+   *
+   * @param \Drupal\tamper\TamperInterface $tamper
+   *   The tamper plugin instance.
+   * @param array $configuration
+   *   An array of tamper configuration.
+   *
+   * @return \Drupal\tamper\TamperInterface
+   *   The updated tamper plugin instance.
+   */
+  public function updateTamper(TamperInterface $tamper, array $configuration);
+
+  /**
    * Removes a tamper plugin instance from this feed type.
    *
    * @param \Drupal\tamper\TamperInterface $tamper
