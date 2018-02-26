@@ -11,6 +11,6 @@
     },
     "require": {
         "drupal/feeds": "~3.0",
-        "drupal/tamper": "~1.0",
+        "drupal/tamper": "~1.0"
     }
 }
