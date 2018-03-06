@@ -4,6 +4,7 @@ namespace Drupal\feeds_tamper\EventSubscriber;
 
 use Drupal\feeds\Event\FeedsEvents;
 use Drupal\feeds\Event\ParseEvent;
+use Drupal\feeds_tamper\FeedTypeTamperManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -16,10 +17,27 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class FeedsSubscriber implements EventSubscriberInterface {
 
   /**
+   * A feed type meta object.
+   *
+   * @var \Drupal\feeds_tamper\FeedTypeTamperManagerInterface
+   */
+  protected $tamperManager;
+
+  /**
+   * Constructs a new FeedsSubscriber object.
+   *
+   * @param \Drupal\feeds_tamper\FeedTypeTamperManagerInterface
+   *   A feed type meta object.
+   */
+  public function __construct(FeedTypeTamperManagerInterface $tamper_manager) {
+    $this->tamperManager = $tamper_manager;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[FeedsEvents::PARSE][] = ['afterParse', -100];
+    $events[FeedsEvents::PARSE][] = ['afterParse', FeedsEvents::AFTER];
     return $events;
   }
 
@@ -27,14 +45,13 @@ class FeedsSubscriber implements EventSubscriberInterface {
    * Acts on parser result.
    */
   public function afterParse(ParseEvent $event) {
-    /** @var \Drupal\feeds\FeedInterface */
+    /** @var \Drupal\feeds\FeedInterface $feed */
     $feed = $event->getFeed();
-    /** @var \Drupal\feeds\Result\ParserResultInterface */
+    /** @var \Drupal\feeds\Result\ParserResultInterface $parser_result */
     $parser_result = $event->getParserResult();
 
-    /** @var \Drupal\feeds_tamper\FeedTypeTamperMetaInterface */
-    // @todo Refactor using dependency injection.
-    $tamper_meta = \Drupal::service('feeds_tamper.feed_type_tamper_manager')->getTamperMeta($feed->getType());
+    /** @var \Drupal\feeds_tamper\FeedTypeTamperMetaInterface $tamper_meta */
+    $tamper_meta = $this->tamperManager->getTamperMeta($feed->getType());
 
     // Load the tamper plugins that need to be applied to Feeds.
     $tampers_by_source = $tamper_meta->getTampersGroupedBySource();
@@ -44,13 +61,13 @@ class FeedsSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    /** @var \Drupal\feeds\Feeds\Item\ItemInterface */
+    /** @var \Drupal\feeds\Feeds\Item\ItemInterface $item */
     foreach ($parser_result as $item) {
       foreach ($tampers_by_source as $source => $tampers) {
         // Get the value for a source.
         $item_value = $item->get($source);
 
-        /** @var Drupal\tamper\TamperInterface */
+        /** @var Drupal\tamper\TamperInterface $tamper */
         foreach ($tampers as $tamper) {
           // @todo if the item was unset by the previous plugin, jump ahead.
           if (!isset($item)) {
