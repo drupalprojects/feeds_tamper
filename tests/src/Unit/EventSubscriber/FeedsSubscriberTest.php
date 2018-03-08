@@ -138,4 +138,54 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
     $this->assertEquals('Bar', $item->get('alpha'));
   }
 
+  /**
+   * @covers ::afterParse
+   */
+  public function testAfterParseWithMultiValueTampers() {
+    // Create a tamper that turns an input value into an array.
+    $tamper1 = $this->prophesize(TamperInterface::class);
+    $tamper1->tamper('Bar')
+      ->willReturn(['Bar', 'Bar']);
+    $tamper1->getPluginDefinition()->willReturn([
+      'handle_multiples' => FALSE,
+    ]);
+    $tamper1->multiple()->willReturn(TRUE);
+    $tamper1 = $tamper1->reveal();
+
+    // Create a tamper that returns 'Foo'.
+    $tamper2 = $this->prophesize(TamperInterface::class);
+    $tamper2->tamper('Bar')
+      ->willReturn('Foo');
+    $tamper2->getPluginDefinition()->willReturn([
+      'handle_multiples' => FALSE,
+    ]);
+    $tamper2->multiple()->willReturn(FALSE);
+    $tamper2 = $tamper2->reveal();
+
+    // Create a tamper that returns 'FooFoo'.
+    $tamper3 = $this->prophesize(TamperInterface::class);
+    $tamper3->tamper('Foo')
+      ->willReturn('FooFoo');
+    $tamper3->getPluginDefinition()->willReturn([
+      'handle_multiples' => FALSE,
+    ]);
+    $tamper3->multiple()->willReturn(FALSE);
+    $tamper3 = $tamper3->reveal();
+
+    $this->tamperMeta->expects($this->once())
+      ->method('getTampersGroupedBySource')
+      ->will($this->returnValue([
+        'alpha' => [$tamper1, $tamper2, $tamper3],
+      ]));
+
+    // Add an item to the parser result.
+    $item = new DynamicItem();
+    $item->set('alpha', 'Bar');
+    $this->event->getParserResult()->addItem($item);
+
+    // Run event callback.
+    $this->subscriber->afterParse($this->event);
+    $this->assertEquals(['FooFoo', 'FooFoo'], $item->get('alpha'));
+  }
+
 }

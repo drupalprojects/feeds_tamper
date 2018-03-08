@@ -66,31 +66,30 @@ class FeedsSubscriber implements EventSubscriberInterface {
       foreach ($tampers_by_source as $source => $tampers) {
         // Get the value for a source.
         $item_value = $item->get($source);
+        $multiple = is_array($item_value);
 
-        /** @var Drupal\tamper\TamperInterface $tamper */
+        /** @var \Drupal\tamper\TamperInterface $tamper */
         foreach ($tampers as $tamper) {
           // @todo if the item was unset by the previous plugin, jump ahead.
           if (!isset($item)) {
             break 2;
           }
 
-          // Array-ness can change depending on what the plugin is doing.
-          $is_array = is_array($item_value);
-
-          // Hard-coded.
-          // @todo replace later.
-          $plugin = [
-            'multi' => 'direct',
-            'single' => NULL,
-          ];
-
-          if ($is_array && $plugin['multi'] === 'loop') {
-            foreach ($item_value as &$i) {
-              $i = $tamper->tamper($i);
+          $definition = $tamper->getPluginDefinition();
+          // Many plugins expect a scalar value but the current value of the
+          // pipeline might be multiple scalars and in this case the current
+          // value needs to be iterated and each scalar separately transformed.
+          if ($multiple && !$definition['handle_multiples']) {
+            $new_value = [];
+            // @todo throw exception if $item_value is not an array.
+            foreach ($item_value as $scalar_value) {
+              $new_value[] = $tamper->tamper($scalar_value);
             }
+            $item_value = $new_value;
           }
           else {
             $item_value = $tamper->tamper($item_value);
+            $multiple = $tamper->multiple();
           }
         }
 
