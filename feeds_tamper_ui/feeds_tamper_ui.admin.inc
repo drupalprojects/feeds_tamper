@@ -289,53 +289,6 @@ function theme_feeds_tamper_ui_list_form($variables) {
 }
 
 /**
- * Delete plugin form.
- */
-function feeds_tamper_ui_delete_form($form, &$form_state, $instance) {
-  if (!$instance) {
-    drupal_set_message(t('Invalid plugin id.'), 'error');
-    return;
-  }
-
-  $form_state['instance'] = $instance;
-
-  if ($instance->export_type & EXPORT_IN_CODE) {
-    $question = t('Would you really like to revert the plugin @instance?', array('@instance' => $instance->description));
-    $button_label = t('Revert');
-  }
-  else {
-    $question = t('Would you really like to delete the plugin @instance?', array('@instance' => $instance->description));
-    $button_label = t('Delete');
-  }
-  return confirm_form(
-    $form,
-    $question,
-    'admin/structure/feeds/' . $instance->importer . '/tamper',
-    NULL,
-    $button_label
-  );
-}
-
-/**
- * Delete plugin form submit handler.
- */
-function feeds_tamper_ui_delete_form_submit($form, &$form_state) {
-  $instance = $form_state['instance'];
-  feeds_tamper_delete_instance($instance);
-  $source_name = feeds_tamper_ui_source_name($instance);
-
-  switch ($instance->export_type) {
-    case EXPORT_IN_DATABASE:
-      drupal_set_message(t('The plugin %plugin has been deleted from %source.', array('%plugin' => $instance->description, '%source' => $source_name)));
-      break;
-    case EXPORT_IN_CODE | EXPORT_IN_DATABASE:
-      drupal_set_message(t('The plugin %plugin has been reverted.', array('%plugin' => $instance->description)));
-      break;
-  }
-  $form_state['redirect'] = 'admin/structure/feeds/' . $instance->importer . '/tamper';
-}
-
-/**
  * Helper functions for ajax.
  */
 function feeds_tamper_machine_name_callback($id, $form, $form_state) {

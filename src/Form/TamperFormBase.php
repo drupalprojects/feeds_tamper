@@ -6,9 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\feeds_tamper\FeedTypeTamperManagerInterface;
 use Drupal\tamper\ConfigurableTamperInterface;
-use Drupal\tamper\TamperManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,34 +23,6 @@ abstract class TamperFormBase extends FormBase {
   const VAR_PLUGIN_CONFIGURATION = 'plugin_configuration';
 
   /**
-   * The feed item we are adding a tamper plugin to.
-   *
-   * @var \Drupal\feeds\FeedTypeInterface
-   */
-  protected $feedsFeedType;
-
-  /**
-   * The tamper plugin instance.
-   *
-   * @var \Drupal\tamper\TamperInterface
-   */
-  protected $plugin;
-
-  /**
-   * The tamper plugin manager.
-   *
-   * @var \Drupal\tamper\TamperManagerInterface
-   */
-  protected $tamperManager;
-
-  /**
-   * The feeds tamper metadata manager.
-   *
-   * @var \Drupal\feeds_tamper\FeedTypeTamperManagerInterface
-   */
-  protected $feedTypeTamperManager;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
@@ -61,26 +31,6 @@ abstract class TamperFormBase extends FormBase {
     $form->setTamperManager($container->get('plugin.manager.tamper'));
     $form->setTamperMetaManager($container->get('feeds_tamper.feed_type_tamper_manager'));
     return $form;
-  }
-
-  /**
-   * Sets the tamper manager.
-   *
-   * @param \Drupal\tamper\TamperManagerInterface $tamper_manager
-   *   Tamper plugin manager.
-   */
-  public function setTamperManager(TamperManagerInterface $tamper_manager) {
-    $this->tamperManager = $tamper_manager;
-  }
-
-  /**
-   * Sets the feed type tamper manager.
-   *
-   * @param \Drupal\feeds_tamper\FeedTypeTamperManagerInterface $feed_type_tamper_manager
-   *   Feed type tamper manager.
-   */
-  public function setTamperMetaManager(FeedTypeTamperManagerInterface $feed_type_tamper_manager) {
-    $this->feedTypeTamperManager = $feed_type_tamper_manager;
   }
 
   /**

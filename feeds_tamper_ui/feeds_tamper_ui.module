@@ -42,12 +42,6 @@ function feeds_tamper_ui_menu() {
     'weight' => 10,
   ) + $defaults;
 
-  $items['admin/structure/feeds/%feeds_importer/tamper/%feeds_tamper_plugin_instance/delete'] = array(
-    'title callback' => 'feeds_tamper_ui_delete_title',
-    'page arguments' => array('feeds_tamper_ui_delete_form', 5),
-    'access arguments' => array(NULL, 5),
-  ) + $defaults;
-
   return $items;
 }
 
@@ -76,16 +70,6 @@ function feeds_tamper_plugin_instance_load($instance_id) {
 function feeds_tamper_ui_source_load($source) {
   // We've HEX encoded the source to allow all possible characters.
   return pack('H*', $source);
-}
-
-/**
- * Delete plugin title callback.
- */
-function feeds_tamper_ui_delete_title($instance) {
-  if ($instance->export_type == EXPORT_IN_DATABASE) {
-    return t('Delete plugin: @id', array('@id', $instance->id));
-  }
-  return t('Revert plugin: @id', array('@id', $instance->id));
 }
 
 /**

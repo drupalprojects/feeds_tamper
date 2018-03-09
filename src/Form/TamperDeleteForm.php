@@ -2,21 +2,55 @@
 
 namespace Drupal\feeds_tamper\Form;
 
+use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\feeds\FeedTypeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Tamper edit form.
+ * Tamper delete form.
  *
  * @package Drupal\feeds_tamper\Form
  */
-class TamperEditForm extends TamperFormBase {
+class TamperDeleteForm extends ConfirmFormBase {
+
+  use TamperFormTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var self $form */
+    $form = parent::create($container);
+    $form->setTamperManager($container->get('plugin.manager.tamper'));
+    $form->setTamperMetaManager($container->get('feeds_tamper.feed_type_tamper_manager'));
+    return $form;
+  }
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'feeds_tamper_edit_form';
+    return 'feeds_tamper_delete_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelUrl() {
+    // @todo Change to the "View tampers" page, once it is implemented.
+    return new Url('<front>');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getQuestion() {
+    return $this->t('Are you sure you want to delete the Tamper plugin instance %instance from the source %source?', [
+      '%source' => $this->plugin->getSetting('source'),
+      '%instance' => $this->plugin->getPluginDefinition()['label'],
+    ]);
   }
 
   /**
@@ -42,7 +76,6 @@ class TamperEditForm extends TamperFormBase {
     $this->plugin = $tamper_meta->getTamper($tamper_uuid);
 
     $form = parent::buildForm($form, $form_state);
-    $form[self::VAR_TAMPER_ID]['#disabled'] = TRUE;
     return $form;
   }
 
@@ -53,13 +86,11 @@ class TamperEditForm extends TamperFormBase {
     $tamper_meta = $this->feedTypeTamperManager->getTamperMeta($this->feedsFeedType);
     $uuid = $this->plugin->getSetting('uuid');
     $tampers_config = $tamper_meta->getTampers()->getConfiguration();
+    $tamper_meta->removeTamper($this->plugin);
 
-    $config = $this->prepareConfig($tampers_config[$uuid]['source'], $form_state);
-    $tamper_meta->updateTamper($this->plugin, $config);
-    $this->feedsFeedType->save();
-
-    drupal_set_message($this->t('The plugin %plugin_label has been updated.', [
-      '%plugin_label' => $this->plugin->getPluginDefinition()['label'],
+    drupal_set_message($this->t('The Tamper plugin instance %plugin has been deleted from %source.', [
+      '%plugin' => $this->plugin->getPluginDefinition()['label'],
+      '%source' => $tampers_config[$uuid]['source'],
     ]));
     // @todo Add a form state redirect back to the overview page.
   }
