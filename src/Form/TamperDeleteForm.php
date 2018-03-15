@@ -39,8 +39,9 @@ class TamperDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    // @todo Change to the "View tampers" page, once it is implemented.
-    return new Url('<front>');
+    return new Url('entity.feeds_feed_type.tamper', [
+      'feeds_feed_type' => $this->feedsFeedType->id(),
+    ]);
   }
 
   /**
@@ -92,7 +93,9 @@ class TamperDeleteForm extends ConfirmFormBase {
       '%plugin' => $this->plugin->getPluginDefinition()['label'],
       '%source' => $tampers_config[$uuid]['source'],
     ]));
-    // @todo Add a form state redirect back to the overview page.
+    $form_state->setRedirect('entity.feeds_feed_type.tamper', [
+      'feeds_feed_type' => $this->feedsFeedType->id(),
+    ]);
   }
 
 }

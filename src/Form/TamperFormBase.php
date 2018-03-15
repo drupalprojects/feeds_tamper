@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 use Drupal\tamper\ConfigurableTamperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -95,13 +96,22 @@ abstract class TamperFormBase extends FormBase {
       $form[self::VAR_PLUGIN_CONFIGURATION] = $this->plugin->buildConfigurationForm($form[self::VAR_PLUGIN_CONFIGURATION], $subform_state);
     }
 
+    $cancel_url = Url::fromRoute('entity.feeds_feed_type.tamper', [
+      'feeds_feed_type' => $this->feedsFeedType->id(),
+    ]);
+
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Submit'),
       '#button_type' => 'primary',
     ];
-    // @todo Add a cancel button back to the overview page.
+    $form['actions']['cancel'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Cancel'),
+      '#attributes' => ['class' => ['button']],
+      '#url' => $cancel_url,
+    ];
     return $form;
   }
 

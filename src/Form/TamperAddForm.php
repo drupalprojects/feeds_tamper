@@ -104,7 +104,6 @@ class TamperAddForm extends TamperFormBase {
       '%plugin_label' => $this->plugin->getPluginDefinition()['label'],
       '%source' => $this->sourceField,
     ]));
-    // @todo Add a form state redirect back to the overview page.
   }
 
 }

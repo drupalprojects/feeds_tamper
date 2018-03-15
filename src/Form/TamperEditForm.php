@@ -61,7 +61,6 @@ class TamperEditForm extends TamperFormBase {
     drupal_set_message($this->t('The plugin %plugin_label has been updated.', [
       '%plugin_label' => $this->plugin->getPluginDefinition()['label'],
     ]));
-    // @todo Add a form state redirect back to the overview page.
   }
 
 }

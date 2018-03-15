@@ -19,13 +19,6 @@ function feeds_tamper_ui_menu() {
   );
 
   $items = array();
-  $items['admin/structure/feeds/%feeds_importer/tamper'] = array(
-    'title' => 'Tamper',
-    'title arguments' => array(),
-    'page arguments' => array('feeds_tamper_ui_list_form', 3),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 10,
-  ) + $defaults;
 
   $items['admin/structure/feeds/%feeds_importer/tamper/manage'] = array(
     'title' => 'List',
@@ -43,18 +36,6 @@ function feeds_tamper_ui_menu() {
   ) + $defaults;
 
   return $items;
-}
-
-/**
- * Implements hook_theme().
- */
-function feeds_tamper_ui_theme($existing, $type, $theme, $path) {
-  return array(
-    'feeds_tamper_ui_list_form' => array(
-      'render element' => 'form',
-      'file' => 'feeds_tamper_ui.admin.inc',
-    ),
-  );
 }
 
 /**
