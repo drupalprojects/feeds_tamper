@@ -4,7 +4,6 @@ namespace Drupal\feeds_tamper;
 
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\feeds\FeedTypeInterface;
-use Drupal\tamper\TamperInterface;
 use Drupal\tamper\TamperManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -42,9 +41,13 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
   protected $tamperCollection;
 
   /**
-   * FeedTypeTamperMeta object constructor.
+   * Constructs a new FeedTypeTamperMeta object.
    *
-   * @param \Drupal\feeds\FeedTypeInterface
+   * @param \Drupal\Component\Uuid\UuidInterface $uuid_generator
+   *   The Uuid generator.
+   * @param \Drupal\tamper\TamperManagerInterface $tamper_manager
+   *   The Tamper plugin manager.
+   * @param \Drupal\feeds\FeedTypeInterface $feed_type
    *   The feed type to manage tamper plugins for.
    */
   public function __construct(UuidInterface $uuid_generator, TamperManagerInterface $tamper_manager, FeedTypeInterface $feed_type) {
@@ -98,7 +101,6 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
   public function getTampersGroupedBySource() {
     $grouped_tampers = [];
     $tampers = $this->getTampers();
-    $dit = $this;
     foreach ($this->getTampers() as $id => $tamper) {
       $grouped_tampers[(string) $tamper->getSetting('source')][$id] = $tamper;
     }
@@ -125,18 +127,18 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateTamper(TamperInterface $tamper, array $configuration) {
-    $configuration['uuid'] = $tamper->getSetting('uuid');
-    $this->getTampers()->setInstanceConfiguration($tamper->getSetting('uuid'), $configuration);
+  public function setTamperConfig($instance_id, array $configuration) {
+    $configuration['uuid'] = $instance_id;
+    $this->getTampers()->setInstanceConfiguration($instance_id, $configuration);
     $this->updateFeedType();
-    return $tamper;
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function removeTamper(TamperInterface $tamper) {
-    $this->getTampers()->removeInstanceId($tamper->getSetting('uuid'));
+  public function removeTamper($instance_id) {
+    $this->getTampers()->removeInstanceId($instance_id);
     $this->updateFeedType();
     $this->feedType->save();
     return $this;

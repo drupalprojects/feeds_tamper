@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
-use Drupal\tamper\ConfigurableTamperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -89,9 +88,7 @@ abstract class TamperFormBase extends FormBase {
       $form[self::VAR_PLUGIN_CONFIGURATION]['description'] = [
         '#markup' => $this->plugin->getPluginDefinition()['description'],
       ];
-    }
 
-    if ($this->plugin instanceof ConfigurableTamperInterface) {
       $subform_state = SubformState::createForSubform($form[self::VAR_PLUGIN_CONFIGURATION], $form, $form_state);
       $form[self::VAR_PLUGIN_CONFIGURATION] = $this->plugin->buildConfigurationForm($form[self::VAR_PLUGIN_CONFIGURATION], $subform_state);
     }
@@ -139,8 +136,7 @@ abstract class TamperFormBase extends FormBase {
     if (empty($this->plugin)) {
       $form_state->setError($form[self::VAR_TAMPER_ID], $this->t('Plugin not selected'));
     }
-
-    if ($this->plugin instanceof ConfigurableTamperInterface) {
+    else {
       $subform_state = SubformState::createForSubform($form[self::VAR_PLUGIN_CONFIGURATION], $form, $form_state);
       $this->plugin->validateConfigurationForm($form[self::VAR_PLUGIN_CONFIGURATION], $subform_state);
     }
@@ -183,8 +179,9 @@ abstract class TamperFormBase extends FormBase {
       'source' => $source,
     ];
 
-    if ($this->plugin instanceof ConfigurableTamperInterface) {
-      $config += $form_state->getValue(self::VAR_PLUGIN_CONFIGURATION);
+    $plugin_config = $form_state->getValue(self::VAR_PLUGIN_CONFIGURATION);
+    if ($plugin_config) {
+      $config += $plugin_config;
     }
 
     return $config;

@@ -2,7 +2,6 @@
 
 namespace Drupal\feeds_tamper;
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Plugin\DefaultLazyPluginCollection;
 
 /**
@@ -24,8 +23,8 @@ class TamperPluginCollection extends DefaultLazyPluginCollection {
     $a = $this->get($aID);
     $b = $this->get($bID);
 
-    if ($a->getWeight() != $b->getWeight()) {
-      return $a->getWeight() < $b->getWeight() ? -1 : 1;
+    if ($a->getSetting('weight') != $b->getSetting('weight')) {
+      return $a->getSetting('weight') < $b->getSetting('weight') ? -1 : 1;
     }
 
     return parent::sortHelper($aID, $bID);

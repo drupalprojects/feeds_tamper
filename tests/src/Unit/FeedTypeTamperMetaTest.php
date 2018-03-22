@@ -1,23 +1,19 @@
 <?php
 
-namespace Drupal\Tests\feeds_tamper\Kernel;
+namespace Drupal\Tests\feeds_tamper\Unit;
 
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\feeds\FeedTypeInterface;
 use Drupal\feeds_tamper\FeedTypeTamperMeta;
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\tamper\Plugin\Tamper\ConvertCase;
+use Drupal\tamper\TamperInterface;
+use Drupal\tamper\TamperManagerInterface;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\feeds_tamper\FeedTypeTamperMeta
  * @group feeds_tamper
  */
-class FeedTypeTamperMetaTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static $modules = ['feeds', 'tamper', 'feeds_tamper'];
+class FeedTypeTamperMetaTest extends UnitTestCase {
 
   /**
    * The Tamper manager for a feed type.
@@ -32,8 +28,6 @@ class FeedTypeTamperMetaTest extends KernelTestBase {
   public function setUp() {
     parent::setUp();
 
-    $container = \Drupal::getContainer();
-
     // Mock the UUID generator and let it always return 'uuid3'.
     $uuid_generator = $this->getMock(UuidInterface::class);
     $uuid_generator->expects($this->any())
@@ -41,7 +35,10 @@ class FeedTypeTamperMetaTest extends KernelTestBase {
       ->will($this->returnValue('uuid3'));
 
     // Get the tamper manager.
-    $tamper_manager = $container->get('plugin.manager.tamper');
+    $tamper_manager = $this->getMock(TamperManagerInterface::class);
+    $tamper_manager->expects($this->any())
+      ->method('createInstance')
+      ->will($this->returnValue($this->getMock(TamperInterface::class)));
 
     // Mock the feed type and let it always return two tampers.
     $feed_type = $this->getMock(FeedTypeInterface::class);
@@ -74,7 +71,7 @@ class FeedTypeTamperMetaTest extends KernelTestBase {
    */
   public function testGetTamper() {
     $tamper = $this->feedTypeTamperMeta->getTamper('uuid2');
-    $this->assertInstanceOf(ConvertCase::class, $tamper);
+    $this->assertInstanceOf(TamperInterface::class, $tamper);
   }
 
   /**
@@ -93,25 +90,7 @@ class FeedTypeTamperMetaTest extends KernelTestBase {
    * @covers ::getTampersGroupedBySource
    */
   public function testGetTampersGroupedBySource() {
-    // Add a second tamper to 'alpha' source.
-    $this->feedTypeTamperMeta->addTamper([
-      'plugin' => 'convert_case',
-      'operation' => 'ucfirst',
-      'source' => 'alpha',
-      'description' => 'Start text with uppercase character',
-    ]);
-
-    $tampers_by_source = $this->feedTypeTamperMeta->getTampersGroupedBySource();
-
-    // Assert tampers for two sources.
-    $this->assertCount(2, $tampers_by_source);
-    $this->assertArrayHasKey('alpha', $tampers_by_source);
-    $this->assertArrayHasKey('beta', $tampers_by_source);
-
-    // Assert that for the first source two tampers exist.
-    $this->assertCount(2, $tampers_by_source['alpha']);
-    // And one for the second.
-    $this->assertCount(1, $tampers_by_source['beta']);
+    $this->assertInternalType('array', $this->feedTypeTamperMeta->getTampersGroupedBySource());
   }
 
   /**
@@ -127,7 +106,7 @@ class FeedTypeTamperMetaTest extends KernelTestBase {
     $this->assertEquals('uuid3', $uuid);
 
     $tamper = $this->feedTypeTamperMeta->getTamper($uuid);
-    $this->assertInstanceOf(ConvertCase::class, $tamper);
+    $this->assertInstanceOf(TamperInterface::class, $tamper);
 
     // Assert that three tampers exist in total.
     $this->assertCount(3, $this->feedTypeTamperMeta->getTampers());
@@ -139,15 +118,10 @@ class FeedTypeTamperMetaTest extends KernelTestBase {
   public function testSetTamperConfig() {
     $separator = ':';
     $description = 'Explode with colon character (updated)';
-    $this->feedTypeTamperMeta->setTamperConfig('uuid1', [
+    $this->assertEquals($this->feedTypeTamperMeta, $this->feedTypeTamperMeta->setTamperConfig('uuid1', [
       'separator' => $separator,
       'description' => $description,
-    ]);
-    $tampers_config = $this->feedTypeTamperMeta->getTampers()->getConfiguration();
-    $config = $tampers_config['uuid1'];
-
-    $this->assertEquals($separator, $config['separator']);
-    $this->assertEquals($description, $config['description']);
+    ]));
   }
 
   /**

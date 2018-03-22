@@ -3,7 +3,6 @@
 namespace Drupal\feeds_tamper;
 
 use Drupal\Core\Plugin\ObjectWithPluginCollectionInterface;
-use Drupal\tamper\TamperInterface;
 
 /**
  * Interface for managing tamper plugins for a feed type.
@@ -49,26 +48,25 @@ interface FeedTypeTamperMetaInterface extends ObjectWithPluginCollectionInterfac
   public function addTamper(array $configuration);
 
   /**
-   * Updates the tamper plugin instance.
+   * Sets the configuration for a tamper plugin instance.
    *
-   * @param \Drupal\tamper\TamperInterface $tamper
-   *   The tamper plugin instance.
+   * @param string $instance_id
+   *   The ID of a tamper plugin to set the configuration for.
    * @param array $configuration
-   *   An array of tamper configuration.
+   *   The tamper plugin configuration to set.
    *
-   * @return \Drupal\tamper\TamperInterface
-   *   The updated tamper plugin instance.
+   * @return $this
    */
-  public function updateTamper(TamperInterface $tamper, array $configuration);
+  public function setTamperConfig($instance_id, array $configuration);
 
   /**
    * Removes a tamper plugin instance from this feed type.
    *
-   * @param \Drupal\tamper\TamperInterface $tamper
-   *   The tamper plugin instance
+   * @param string $instance_id
+   *   The ID of a tamper plugin to remove.
    *
    * @return $this
    */
-  public function removeTamper(TamperInterface $tamper);
+  public function removeTamper($instance_id);
 
 }

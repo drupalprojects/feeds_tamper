@@ -194,7 +194,7 @@ class TamperListForm extends FormBase {
       foreach ($this->tampers[$source] as $id => $tamper) {
         $row = [
           '#attributes' => ['class' => ['draggable']],
-          '#weight' => $tamper->getWeight(),
+          '#weight' => $tamper->getSetting('weight'),
         ];
         // Plugin instance description.
         $row['description'] = [
@@ -206,7 +206,7 @@ class TamperListForm extends FormBase {
           '#title' => $this->t('Weight'),
           '#title_display' => 'invisible',
           '#type' => 'number',
-          '#default_value' => $tamper->getWeight(),
+          '#default_value' => $tamper->getSetting('weight'),
           '#attributes' => ['class' => ['tamper-weight']],
         ];
         $row['plugin'] = [
