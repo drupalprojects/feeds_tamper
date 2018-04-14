@@ -188,8 +188,8 @@ class TamperListForm extends FormBase {
 
     $item['#caption'] = $source_label . ' -> ' . implode(', ', $target_labels);
 
+    $add_plugin_weight = 0;
     if (!empty($this->tampers[$source])) {
-      // @todo Make sure tampers are sorted by weight.
       /** @var \Drupal\tamper\TamperInterface $tamper */
       foreach ($this->tampers[$source] as $id => $tamper) {
         $row = [
@@ -205,7 +205,7 @@ class TamperListForm extends FormBase {
         $row['weight'] = [
           '#title' => $this->t('Weight'),
           '#title_display' => 'invisible',
-          '#type' => 'number',
+          '#type' => 'weight',
           '#default_value' => $tamper->getSetting('weight'),
           '#attributes' => ['class' => ['tamper-weight']],
         ];
@@ -231,12 +231,13 @@ class TamperListForm extends FormBase {
         // @todo Implement enabled.
         // $row['enabled'] = '';
         $item[$id] = $row;
+        $add_plugin_weight = $tamper->getSetting('weight') + 1;
       }
     }
 
     $add_tamper_url = Url::fromRoute('entity.feeds_feed_type.tamper_add', $url_parameters + [
       'source_field' => $source,
-    ], ['query' => $destination_query]);
+    ], ['query' => array_merge($destination_query, ['weight' => $add_plugin_weight])]);
     $item['add']['link'] = [
       '#type' => 'link',
       '#title' => $this->t('Add plugin'),
@@ -253,14 +254,16 @@ class TamperListForm extends FormBase {
     foreach ($this->groupedMappings as $source => $targets) {
       if ($tampers = $form_state->getValue($source)) {
         foreach ($tampers as $tamper_uuid => $values) {
-          // @todo Implement weight & enabled.
+          // @todo Implement enabled.
           $tamper_meta = $this->feedTypeTamperManager->getTamperMeta($this->feedsFeedType);
 
           $tamper = $tamper_meta->getTamper($tamper_uuid);
-          drupal_set_message($this->t('Your changes have been saved.'));
+          $tamper_meta->setTamperConfig($tamper_uuid, array_merge($tamper->getConfiguration(), ['weight' => $values['weight']]));
         }
       }
     }
+    $this->feedsFeedType->save();
+    drupal_set_message($this->t('Your changes have been saved.'));
   }
 
 }

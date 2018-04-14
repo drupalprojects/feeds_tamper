@@ -100,7 +100,7 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
    */
   public function getTampersGroupedBySource() {
     $grouped_tampers = [];
-    $tampers = $this->getTampers();
+    $this->getTampers()->sort();
     foreach ($this->getTampers() as $id => $tamper) {
       $grouped_tampers[(string) $tamper->getSetting('source')][$id] = $tamper;
     }
@@ -148,6 +148,7 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
    * Writes tampers back on the feed type.
    */
   protected function updateFeedType() {
+    $this->getTampers()->sort();
     foreach ($this->getPluginCollections() as $plugin_config_key => $plugin_collection) {
       $this->feedType->setThirdPartySetting('feeds_tamper', $plugin_config_key, $plugin_collection->getConfiguration());
     }

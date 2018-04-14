@@ -21,6 +21,7 @@ abstract class TamperFormBase extends FormBase {
   // Form fields.
   const VAR_TAMPER_ID = 'tamper_id';
   const VAR_PLUGIN_CONFIGURATION = 'plugin_configuration';
+  const VAR_WEIGHT = 'weight';
 
   /**
    * {@inheritdoc}
@@ -92,6 +93,11 @@ abstract class TamperFormBase extends FormBase {
       $subform_state = SubformState::createForSubform($form[self::VAR_PLUGIN_CONFIGURATION], $form, $form_state);
       $form[self::VAR_PLUGIN_CONFIGURATION] = $this->plugin->buildConfigurationForm($form[self::VAR_PLUGIN_CONFIGURATION], $subform_state);
     }
+
+    $form[self::VAR_WEIGHT] = [
+      '#type' => 'hidden',
+      '#value' => $this->getWeight(),
+    ];
 
     $cancel_url = Url::fromRoute('entity.feeds_feed_type.tamper', [
       'feeds_feed_type' => $this->feedsFeedType->id(),
@@ -177,6 +183,7 @@ abstract class TamperFormBase extends FormBase {
     $config = [
       'plugin' => $this->plugin->getPluginId(),
       'source' => $source,
+      'weight' => $form_state->getValue(self::VAR_WEIGHT),
     ];
 
     $plugin_config = $form_state->getValue(self::VAR_PLUGIN_CONFIGURATION);
@@ -185,6 +192,23 @@ abstract class TamperFormBase extends FormBase {
     }
 
     return $config;
+  }
+
+  /**
+   * Gets the weight to use for the plugin.
+   *
+   * @return int
+   *   The plugin's weight.
+   */
+  protected function getWeight() {
+    $request = $this->getRequest();
+    if ($request->query->has(self::VAR_WEIGHT)) {
+      return (int) $request->query->get(self::VAR_WEIGHT);
+    }
+    if ($this->plugin) {
+      return (int) $this->plugin->getSetting(self::VAR_WEIGHT);
+    }
+    return 0;
   }
 
 }
