@@ -6,11 +6,13 @@ use Drupal\feeds\Event\ParseEvent;
 use Drupal\feeds\Feeds\Item\DynamicItem;
 use Drupal\feeds\Result\FetcherResultInterface;
 use Drupal\feeds\Result\ParserResult;
+use Drupal\feeds_tamper\Adapter\TamperableFeedItemAdapter;
 use Drupal\feeds_tamper\EventSubscriber\FeedsSubscriber;
 use Drupal\feeds_tamper\FeedTypeTamperManagerInterface;
 use Drupal\feeds_tamper\FeedTypeTamperMetaInterface;
 use Drupal\tamper\TamperInterface;
 use Drupal\Tests\feeds_tamper\Unit\FeedsTamperTestCase;
+use Prophecy\Argument;
 
 /**
  * @coversDefaultClass \Drupal\feeds_tamper\EventSubscriber\FeedsSubscriber
@@ -144,7 +146,7 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
   public function testAfterParseWithMultiValueTampers() {
     // Create a tamper that turns an input value into an array.
     $tamper1 = $this->prophesize(TamperInterface::class);
-    $tamper1->tamper('Bar')
+    $tamper1->tamper('Bar', Argument::type(TamperableFeedItemAdapter::class))
       ->willReturn(['Bar', 'Bar']);
     $tamper1->getPluginDefinition()->willReturn([
       'handle_multiples' => FALSE,
@@ -154,7 +156,7 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
     // Create a tamper that returns 'Foo'.
     $tamper2 = $this->prophesize(TamperInterface::class);
-    $tamper2->tamper('Bar')
+    $tamper2->tamper('Bar', Argument::type(TamperableFeedItemAdapter::class))
       ->willReturn('Foo');
     $tamper2->getPluginDefinition()->willReturn([
       'handle_multiples' => FALSE,
@@ -164,7 +166,7 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
     // Create a tamper that returns 'FooFoo'.
     $tamper3 = $this->prophesize(TamperInterface::class);
-    $tamper3->tamper('Foo')
+    $tamper3->tamper('Foo', Argument::type(TamperableFeedItemAdapter::class))
       ->willReturn('FooFoo');
     $tamper3->getPluginDefinition()->willReturn([
       'handle_multiples' => FALSE,
@@ -186,6 +188,49 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
     // Run event callback.
     $this->subscriber->afterParse($this->event);
     $this->assertEquals(['FooFoo', 'FooFoo'], $item->get('alpha'));
+  }
+
+  /**
+   * @covers ::afterParse
+   */
+  public function testAfterParseWithTamperItem() {
+    // Create a tamper plugin that manipulates the whole item.
+    $tamper = $this->getMock(TamperInterface::class);
+    $tamper->expects($this->once())
+      ->method('tamper')
+      ->will($this->returnCallback([$this, 'callbackWithTamperItem']));
+
+    $this->tamperMeta->expects($this->once())
+      ->method('getTampersGroupedBySource')
+      ->will($this->returnValue([
+        'alpha' => [$tamper],
+      ]));
+
+    // Add an item to the parser result.
+    $item = new DynamicItem();
+    $item->set('alpha', 'Foo');
+    $item->set('beta', 'Bar');
+    $item->set('gamma', 'Qux');
+    $this->event->getParserResult()->addItem($item);
+
+    // Run event callback.
+    $this->subscriber->afterParse($this->event);
+    $this->assertEquals('Fooing', $item->get('alpha'));
+    $this->assertEquals('Baring', $item->get('beta'));
+    $this->assertEquals('Quxing', $item->get('gamma'));
+  }
+
+  /**
+   * Callback for testAfterParseWithTamperItem().
+   */
+  public function callbackWithTamperItem($data, TamperableFeedItemAdapter $item) {
+    // Add "ing" to each property.
+    foreach ($item->getSource() as $key => $value) {
+      $item->setSourceProperty($key, $value . 'ing');
+    }
+
+    // Make sure that "ing" is also added to the field that is being tampered.
+    return $data . 'ing';
   }
 
 }

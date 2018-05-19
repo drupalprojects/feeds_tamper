@@ -4,6 +4,7 @@ namespace Drupal\feeds_tamper\EventSubscriber;
 
 use Drupal\feeds\Event\FeedsEvents;
 use Drupal\feeds\Event\ParseEvent;
+use Drupal\feeds_tamper\Adapter\TamperableFeedItemAdapter;
 use Drupal\feeds_tamper\FeedTypeTamperManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -63,6 +64,7 @@ class FeedsSubscriber implements EventSubscriberInterface {
 
     /** @var \Drupal\feeds\Feeds\Item\ItemInterface $item */
     foreach ($parser_result as $item) {
+      $tamperable_item = new TamperableFeedItemAdapter($item);
       foreach ($tampers_by_source as $source => $tampers) {
         // Get the value for a source.
         $item_value = $item->get($source);
@@ -83,12 +85,12 @@ class FeedsSubscriber implements EventSubscriberInterface {
             $new_value = [];
             // @todo throw exception if $item_value is not an array.
             foreach ($item_value as $scalar_value) {
-              $new_value[] = $tamper->tamper($scalar_value);
+              $new_value[] = $tamper->tamper($scalar_value, $tamperable_item);
             }
             $item_value = $new_value;
           }
           else {
-            $item_value = $tamper->tamper($item_value);
+            $item_value = $tamper->tamper($item_value, $tamperable_item);
             $multiple = $tamper->multiple();
           }
         }
