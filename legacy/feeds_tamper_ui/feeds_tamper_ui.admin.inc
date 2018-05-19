@@ -24,18 +24,3 @@ function feeds_tamper_ajax_callback($form, $form_state) {
   // item as it is.
   return $form['plugin'];
 }
-
-/**
- * Export form.
- */
-function feeds_tamper_ui_export_form($form, &$form_state, $importer) {
-  $code = feeds_tamper_export($importer->id);
-
-  $form['export'] = array(
-    '#title' => t('Export Feeds Tamper plugins'),
-    '#type' => 'textarea',
-    '#value' => $code,
-    '#rows' => substr_count($code, "\n") + 2,
-  );
-  return $form;
-}
