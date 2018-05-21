@@ -36,6 +36,8 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
   /**
    * The tamper meta.
+   *
+   * @var \Drupal\feeds_tamper\FeedTypeTamperMetaInterface
    */
   protected $tamperMeta;
 
@@ -66,8 +68,8 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
    * Creates a tamper mock with a return value for the tamper() method.
    *
    * @param mixed $return_value
-   *   (optional) The value that the tamper plugin must return when tamper() gets
-   *   called on it.
+   *   (optional) The value that the tamper plugin must return when tamper()
+   *   gets called on it.
    *
    * @return \Drupal\tamper\TamperInterface
    *   A mocked tamper plugin.

@@ -61,7 +61,7 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
    *
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    *   The service container.
-   * @param \Drupal\feeds\FeedTypeInterface
+   * @param \Drupal\feeds\FeedTypeInterface $feed_type
    *   The feed type to manage tamper plugins for.
    *
    * @return static

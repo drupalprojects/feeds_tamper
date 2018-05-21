@@ -27,7 +27,7 @@ class FeedsSubscriber implements EventSubscriberInterface {
   /**
    * Constructs a new FeedsSubscriber object.
    *
-   * @param \Drupal\feeds_tamper\FeedTypeTamperManagerInterface
+   * @param \Drupal\feeds_tamper\FeedTypeTamperManagerInterface $tamper_manager
    *   A feed type meta object.
    */
   public function __construct(FeedTypeTamperManagerInterface $tamper_manager) {
