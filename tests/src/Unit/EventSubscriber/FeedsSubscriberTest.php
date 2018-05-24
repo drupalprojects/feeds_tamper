@@ -10,6 +10,8 @@ use Drupal\feeds_tamper\Adapter\TamperableFeedItemAdapter;
 use Drupal\feeds_tamper\EventSubscriber\FeedsSubscriber;
 use Drupal\feeds_tamper\FeedTypeTamperManagerInterface;
 use Drupal\feeds_tamper\FeedTypeTamperMetaInterface;
+use Drupal\tamper\Exception\SkipTamperDataException;
+use Drupal\tamper\Exception\SkipTamperItemException;
 use Drupal\tamper\TamperInterface;
 use Drupal\Tests\feeds_tamper\Unit\FeedsTamperTestCase;
 use Prophecy\Argument;
@@ -85,6 +87,7 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
   /**
    * @covers ::afterParse
+   * @covers ::alterItem
    */
   public function testAfterParse() {
     $tamper = $this->getMock(TamperInterface::class);
@@ -126,6 +129,7 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
   /**
    * @covers ::afterParse
+   * @covers ::alterItem
    */
   public function testAfterParseWithNoTampers() {
     $this->tamperMeta->expects($this->once())
@@ -144,6 +148,7 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
   /**
    * @covers ::afterParse
+   * @covers ::alterItem
    */
   public function testAfterParseWithMultiValueTampers() {
     // Create a tamper that turns an input value into an array.
@@ -194,6 +199,7 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
   /**
    * @covers ::afterParse
+   * @covers ::alterItem
    */
   public function testAfterParseWithTamperItem() {
     // Create a tamper plugin that manipulates the whole item.
@@ -233,6 +239,111 @@ class FeedsSubscriberTest extends FeedsTamperTestCase {
 
     // Make sure that "ing" is also added to the field that is being tampered.
     return $data . 'ing';
+  }
+
+  /**
+   * @covers ::afterParse
+   * @covers ::alterItem
+   */
+  public function testAfterParseWithSkippingItem() {
+    // Create a tamper plugin that will throw a SkipTamperItemException for some
+    // values.
+    $tamper = $this->getMock(TamperInterface::class);
+    $tamper->expects($this->exactly(2))
+      ->method('tamper')
+      ->will($this->returnCallback([$this, 'callbackSkipItem']));
+
+    $this->tamperMeta->expects($this->once())
+      ->method('getTampersGroupedBySource')
+      ->will($this->returnValue([
+        'alpha' => [$tamper],
+      ]));
+
+    // Create three items. The first item should get removed.
+    $item1 = new DynamicItem();
+    $item1->set('alpha', 'Foo');
+    $this->event->getParserResult()->addItem($item1);
+    $item2 = new DynamicItem();
+    $item2->set('alpha', 'Bar');
+    $this->event->getParserResult()->addItem($item2);
+
+    $this->subscriber->afterParse($this->event);
+
+    // Assert that only item 2 still exists.
+    $this->assertEquals(1, $this->event->getParserResult()->count());
+    $this->assertSame($item2, $this->event->getParserResult()->offsetGet(0));
+  }
+
+  /**
+   * Callback for testAfterParseWithSkippingItem().
+   */
+  public function callbackSkipItem($data, TamperableFeedItemAdapter $item) {
+    if ($data == 'Foo') {
+      throw new SkipTamperItemException();
+    }
+  }
+
+  /**
+   * @covers ::afterParse
+   * @covers ::alterItem
+   */
+  public function testAfterParseWithSkippingData() {
+    // Create a tamper plugin that will throw a SkipTamperDataException for some
+    // values.
+    $tamper1 = $this->getMock(TamperInterface::class);
+    $tamper1->expects($this->exactly(2))
+      ->method('tamper')
+      ->will($this->returnCallback([$this, 'callbackSkipData']));
+
+    // Create a second tamper plugin that will just set the value to 'Qux'.
+    $tamper2 = $this->getMock(TamperInterface::class);
+    $tamper2->expects($this->once())
+      ->method('tamper')
+      ->will($this->returnValue('Qux'));
+
+    // Create a third tamper plugin that operates on the 'beta' field, to ensure
+    // skipping on the 'alpha' field does not skip the 'beta' field.
+    $tamper3 = $this->getMock(TamperInterface::class);
+    $tamper3->expects($this->exactly(2))
+      ->method('tamper')
+      ->will($this->returnValue('Baz'));
+
+    $this->tamperMeta->expects($this->once())
+      ->method('getTampersGroupedBySource')
+      ->will($this->returnValue([
+        'alpha' => [$tamper1, $tamper2],
+        'beta' => [$tamper3],
+      ]));
+
+    // Create two items. The first item should get the value unset.
+    $item1 = new DynamicItem();
+    $item1->set('alpha', 'Foo');
+    $item1->set('beta', 'Foo');
+    $this->event->getParserResult()->addItem($item1);
+    $item2 = new DynamicItem();
+    $item2->set('alpha', 'Bar');
+    $item2->set('beta', 'Bar');
+    $this->event->getParserResult()->addItem($item2);
+
+    $this->subscriber->afterParse($this->event);
+
+    // Assert that 2 items still exist.
+    $this->assertEquals(2, $this->event->getParserResult()->count());
+    // And assert that item 1 no longer has an alpha value.
+    $this->assertNull($item1->get('alpha'));
+    // Assert other values.
+    $this->assertEquals($item1->get('beta'), 'Baz');
+    $this->assertEquals($item2->get('alpha'), 'Qux');
+    $this->assertEquals($item2->get('beta'), 'Baz');
+  }
+
+  /**
+   * Callback for testAfterParseWithSkippingData().
+   */
+  public function callbackSkipData($data, TamperableFeedItemAdapter $item) {
+    if ($data == 'Foo') {
+      throw new SkipTamperDataException();
+    }
   }
 
 }
