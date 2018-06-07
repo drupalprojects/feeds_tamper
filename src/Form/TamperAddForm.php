@@ -95,6 +95,12 @@ class TamperAddForm extends TamperFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Support non-javascript browsers.
+    if (empty($this->plugin) || $this->plugin->getPluginId() !== $form_state->getValue('tamper_id')) {
+      $form_state->setRebuild();
+      return;
+    }
+
     $config = $this->prepareConfig($this->sourceField, $form_state);
     $tamper_meta = $this->feedTypeTamperManager->getTamperMeta($this->feedsFeedType);
     $tamper_meta->addTamper($config);

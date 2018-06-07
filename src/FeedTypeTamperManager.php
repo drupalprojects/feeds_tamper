@@ -22,10 +22,10 @@ class FeedTypeTamperManager implements FeedTypeTamperManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getTamperMeta(FeedTypeInterface $feed_type) {
+  public function getTamperMeta(FeedTypeInterface $feed_type, $reset = FALSE) {
     $id = $feed_type->id();
 
-    if (!isset($this->tamperMetas[$id])) {
+    if ($reset || !isset($this->tamperMetas[$id])) {
       $this->tamperMetas[$id] = FeedTypeTamperMeta::create($this->container, $feed_type);
     }
 

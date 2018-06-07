@@ -6,13 +6,11 @@ feeds.feed_type.*.third_party.feeds_tamper:
     tampers:
       type: sequence
       sequence:
-        type: feeds_tamper
+        type: feeds_tamper.[plugin]
 
 # Feeds Tamper instance.
-# @todo figure out how to describe additional keys.
-feeds_tamper:
-  type: mapping
-  label: 'Feeds Tamper instance'
+feeds_tamper.*:
+  type: tamper.[plugin]
   mapping:
     uuid:
       type: uuid

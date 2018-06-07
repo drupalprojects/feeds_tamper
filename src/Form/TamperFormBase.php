@@ -139,10 +139,7 @@ abstract class TamperFormBase extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    if (empty($this->plugin)) {
-      $form_state->setError($form[self::VAR_TAMPER_ID], $this->t('Plugin not selected'));
-    }
-    else {
+    if (!empty($this->plugin)) {
       $subform_state = SubformState::createForSubform($form[self::VAR_PLUGIN_CONFIGURATION], $form, $form_state);
       $this->plugin->validateConfigurationForm($form[self::VAR_PLUGIN_CONFIGURATION], $subform_state);
     }
