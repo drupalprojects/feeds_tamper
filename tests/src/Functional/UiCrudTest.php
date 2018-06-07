@@ -143,7 +143,6 @@ class UiCrudTest extends FeedsTamperBrowserTestBase {
    * Tests removing a Tamper plugin using the UI.
    */
   public function testRemoveTamperInstance() {
-    $this->markTestIncomplete('Not working properly. To be fixed in https://www.drupal.org/project/feeds_tamper/issues/2965816');
     // Programmatically add a tamper plugin instance.
     $this->feedTypeTamperManager
       ->getTamperMeta($this->feedType, TRUE)
@@ -167,7 +166,7 @@ class UiCrudTest extends FeedsTamperBrowserTestBase {
     // Confirm.
     $this->drupalPostForm(NULL, [], 'Confirm');
 
-    // Assert that tamper instance was removed.
+    // Assert that the tamper instance was removed.
     $this->feedType = $this->reloadEntity($this->feedType);
     $plugin_collection = $this->feedTypeTamperManager
       ->getTamperMeta($this->feedType, TRUE)

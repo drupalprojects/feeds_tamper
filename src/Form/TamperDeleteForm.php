@@ -87,7 +87,7 @@ class TamperDeleteForm extends ConfirmFormBase {
     $tamper_meta = $this->feedTypeTamperManager->getTamperMeta($this->feedsFeedType);
     $uuid = $this->plugin->getSetting('uuid');
     $tampers_config = $tamper_meta->getTampers()->getConfiguration();
-    $tamper_meta->removeTamper($this->plugin);
+    $tamper_meta->removeTamper($uuid);
 
     drupal_set_message($this->t('The Tamper plugin instance %plugin has been deleted from %source.', [
       '%plugin' => $this->plugin->getPluginDefinition()['label'],
