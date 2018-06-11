@@ -5,19 +5,13 @@ namespace Drupal\Tests\feeds_tamper\Kernel;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\feeds\FeedTypeInterface;
 use Drupal\feeds_tamper\FeedTypeTamperMeta;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\tamper\Plugin\Tamper\ConvertCase;
 
 /**
  * @coversDefaultClass \Drupal\feeds_tamper\FeedTypeTamperMeta
  * @group feeds_tamper
  */
-class FeedTypeTamperMetaTest extends KernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static $modules = ['feeds', 'tamper', 'feeds_tamper'];
+class FeedTypeTamperMetaTest extends FeedsTamperKernelTestBase {
 
   /**
    * The Tamper manager for a feed type.

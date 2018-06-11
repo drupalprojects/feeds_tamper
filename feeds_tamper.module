@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\feeds\FeedTypeInterface;
 
 /**
  * Implements hook_entity_operation().
@@ -60,4 +61,16 @@ function feeds_tamper_entity_type_alter(array &$entity_types) {
   if (isset($entity_types['feeds_feed_type'])) {
     $entity_types['feeds_feed_type']->setLinkTemplate('tamper', '/admin/structure/feeds/manage/{feeds_feed_type}/tamper');
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for 'feeds_feed_type'.
+ *
+ * Remove tamper plugin instances for removed mappers.
+ */
+function feeds_tamper_feeds_feed_type_presave(FeedTypeInterface $feed_type) {
+  /** @var \Drupal\feeds_tamper\FeedTypeTamperMetaInterface $feed_type_tamper_meta */
+  $feed_type_tamper_meta = \Drupal::service('feeds_tamper.feed_type_tamper_manager')
+    ->getTamperMeta($feed_type)
+    ->rectifyInstances();
 }

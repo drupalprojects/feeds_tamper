@@ -140,8 +140,42 @@ class FeedTypeTamperMeta implements FeedTypeTamperMetaInterface {
   public function removeTamper($instance_id) {
     $this->getTampers()->removeInstanceId($instance_id);
     $this->updateFeedType();
-    $this->feedType->save();
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function rectifyInstances() {
+    // Check the difference between the tampers grouped by source and a list of
+    // all sources used in mapping. By diffing we keep an array of tampers
+    // belonging to a source that is no longer used in the mapping.
+    $tampers_by_source_to_remove = array_diff_key($this->getTampersGroupedBySource(), $this->getUniqueSourceList());
+
+    // Remove these tamper instances.
+    foreach ($tampers_by_source_to_remove as $tampers) {
+      foreach ($tampers as $uuid => $tamper) {
+        $this->removeTamper($uuid);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUniqueSourceList() {
+    // Extract used sources from mappings.
+    $sources = [];
+    foreach ($this->feedType->getMappings() as $mapping) {
+      foreach ($mapping['map'] as $column => $source) {
+        if ($source == '') {
+          continue;
+        }
+        $sources[$source] = $source;
+      }
+    }
+
+    return $sources;
   }
 
   /**

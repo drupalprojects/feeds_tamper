@@ -69,4 +69,17 @@ interface FeedTypeTamperMetaInterface extends ObjectWithPluginCollectionInterfac
    */
   public function removeTamper($instance_id);
 
+  /**
+   * Removes tamper instances whose source was removed from the mapping.
+   */
+  public function rectifyInstances();
+
+  /**
+   * Returns an unique list of sources used in mappings.
+   *
+   * @return string[]
+   *   A list of sources.
+   */
+  public function getUniqueSourceList();
+
 }

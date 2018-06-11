@@ -6,57 +6,6 @@
  */
 
 /**
- * Removes plugin instances whos source was removed.
- *
- * @param FeedsImporter $importer
- *   The importer to rectify against.
- */
-function feeds_tamper_rectify_instances(FeedsImporter $importer) {
-  ctools_include('export');
-  $instances = ctools_export_load_object('feeds_tamper', 'conditions', array('importer' => $importer->id));
-  $sources = feeds_tamper_get_unique_source_list($importer, FALSE);
-
-  foreach ($instances as $instance) {
-    if (in_array($instance->source, $sources)) {
-      continue;
-    }
-
-    if ($instance->export_type == EXPORT_IN_DATABASE) {
-      feeds_tamper_delete_instance($instance);
-    }
-    else {
-      $instance->disabled = TRUE;
-      feeds_tamper_save_instance($instance);
-    }
-  }
-}
-
-/**
- * Returns a unique list of sources in order.
- *
- * @param FeedsImporter $importer
- *   The importer.
- *
- * @return array
- *   A list of sources.
- */
-function feeds_tamper_get_unique_source_list($importer, $lower = TRUE) {
-  $sources = array();
-  $is_csv = $lower && ($importer->parser instanceof FeedsCSVParser);
-
-  foreach ($importer->processor->getMappings() as $mapping) {
-    if ($is_csv) {
-      $sources[] = drupal_strtolower($mapping['source']);
-    }
-    else {
-      $sources[] = $mapping['source'];
-    }
-  }
-
-  return array_unique($sources);
-}
-
-/**
  * Return a machine name safe version of a string.
  *
  * @param string $string
