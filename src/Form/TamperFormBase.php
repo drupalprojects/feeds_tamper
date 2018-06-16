@@ -75,7 +75,7 @@ abstract class TamperFormBase extends FormBase {
       '#required' => TRUE,
       '#default_value' => $this->plugin ? $this->plugin->getPluginDefinition()['id'] : NULL,
       '#ajax' => [
-        'callback' => self::class . '::getPluginForm',
+        'callback' => '::getPluginForm',
         'wrapper' => 'plugin-config',
       ],
     ];
